@@ -190,12 +190,13 @@
                                                             String.valueOf(sessionDataItemValues.get("startTimestamp"));
                                                             Timestamp stamp = new Timestamp(Long.parseLong(timestamp));
                                                             Date date = new Date(stamp.getTime());
-                                                            String sessionId = sessionDataItem.getString("id");
+                                                            String sessionId =
+                                                            sessionDataItemValues.getString("sessionId");
                                                     %>
                                                 
                                                 <tr>
                                                     <td><input type="checkbox"
-                                                               name=<%=sessionId%> value="valueTest" />&nbsp;
+                                                               name=<%=sessionId%> value=<%=sessionId%> />&nbsp;
                                                     </td>
                                                     <td class="mdl-data-table__cell--non-numeric"><%= userAgent%></td>
                                                     <td class="mdl-data-table__cell--non-numeric"><%= date %></td>
