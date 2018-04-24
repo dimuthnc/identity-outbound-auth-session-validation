@@ -1,1 +1,1 @@
-# identity-local-auth-basicauth
+# Authenticator for validating active session count
