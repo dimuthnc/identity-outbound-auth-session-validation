@@ -42,6 +42,7 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.L
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.services.SessionManagementService;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
+import org.wso2.carbon.identity.application.authenticator.sessionauth.exception.SessionValidationException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     @Override
     public AuthenticatorFlowStatus process(HttpServletRequest request,
                                            HttpServletResponse response, AuthenticationContext context)
-            throws AuthenticationFailedException, LogoutFailedException {
+            throws AuthenticationFailedException{
 
         if (context.isLogoutRequest()) {
             return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
@@ -80,9 +81,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             try {
 
                 processAuthenticationResponse(request, response, context);
-            } catch (AuthenticationFailedException e) {
-                throw e;
-            } catch (Exception e) {
+            }catch (SessionValidationException e) {
 
                 context.setRetrying(true);
                 context.setCurrentAuthenticator(getName());
@@ -175,25 +174,30 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     @Override
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response, AuthenticationContext context)
             throws AuthenticationFailedException {
+        try{
+            int closedSessionCount = 0;
+            SessionManagementService sessionManagementService = new SessionManagementService();
+            for (int index = 0; index < sessionMetaData.length(); index++) {
+                JSONObject session = new JSONObject(sessionMetaData.get(index).toString());
+                JSONObject sessionValues = new JSONObject(String.valueOf(session.get("values")));
+                if (StringUtils.isNotEmpty(request.getParameter(String.valueOf(sessionValues.get("sessionId"))))) {
+                    String sessionId = String.valueOf(sessionValues.get("sessionId"));
+                    boolean isRemoved = sessionManagementService.removeSession(sessionId);
+                    if (isRemoved) {
+                        closedSessionCount++;
+                        log.info("Session with Session ID :" + sessionId + " removed as requested.");
+                    }
 
-        int closedSessionCount = 0;
-        SessionManagementService sessionManagementService = new SessionManagementService();
-        for (int index = 0; index < sessionMetaData.length(); index++) {
-            JSONObject session = new JSONObject(sessionMetaData.get(index).toString());
-            JSONObject sessionValues = new JSONObject(String.valueOf(session.get("values")));
-            if (StringUtils.isNotEmpty(request.getParameter(String.valueOf(sessionValues.get("sessionId"))))) {
-                String sessionId = String.valueOf(sessionValues.get("sessionId"));
-                boolean isRemoved = sessionManagementService.removeSession(sessionId);
-                if (isRemoved) {
-                    closedSessionCount++;
-                    log.info("Session with Session ID :" + sessionId + " removed as requested.");
                 }
-
+            }
+            if (sessionMetaData.length()- closedSessionCount > sessionLimit) {
+                throw new SessionValidationException("Terminated session amount is not sufficient to continue");
             }
         }
-        if (sessionMetaData.length()- closedSessionCount > sessionLimit) {
-            throw new AuthenticationFailedException("Allowed session limit exceeded.");
+        catch (Exception e){
+            throw new AuthenticationFailedException("Exception occurred in session termination. Please try again",e);
         }
+
     }
 
     @Override
