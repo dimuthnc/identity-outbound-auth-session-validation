@@ -21,23 +21,14 @@
 <%@page import="org.json.JSONObject" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Date" %>
-<%@ page import="java.text.DateFormat" %>
-<%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="org.joda.time.DateTime" %>
 <%@ page import="java.sql.Timestamp" %>
-<%@page import="java.util.ArrayList" %>
-<%@page import="java.util.Arrays" %>
-<%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
 
-
 <%
     request.getSession().invalidate();
-    String queryString = request.getQueryString();
-    Map<String, String> idpAuthenticatorMapping = null;
     
     String errorMessage = "Authentication Failed! Please Retry";
     String authenticationFailed = "false";
@@ -46,11 +37,6 @@
     String sessionData = new String(Base64.decodeBase64(sessionDataEncoded));
     JSONArray sessionDataArray = new JSONArray(sessionData);
     
-    
-    
-    if (request.getAttribute(Constants.IDP_AUTHENTICATOR_MAP) != null) {
-        idpAuthenticatorMapping = (Map<String, String>) request.getAttribute(Constants.IDP_AUTHENTICATOR_MAP);
-    }
     if (Boolean.parseBoolean(request.getParameter(Constants.AUTH_FAILURE))) {
         authenticationFailed = "true";
         if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
@@ -60,10 +46,7 @@
             }
         }
     }
-
-
 %>
-
 <html>
 <head>
     <meta charset="utf-8">
@@ -76,23 +59,12 @@
     <link href="css/custom-common.css" rel="stylesheet">
     
     
-    
-    
-    
-    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <!-- Material Design icon font -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    
-    <script src="js/scripts.js"></script>
-    <script src="assets/js/jquery-1.7.1.min.js"></script>
+
+    <%--<script src="assets/js/jquery-1.7.1.min.js"></script>--%>
     <!--[if lt IE 9]>
     <script src="js/html5shiv.min.js"></script>
     <script src="js/respond.min.js"></script>
     <![endif]-->
-
-
-
 </head>
 
 <body onload="getLoginDiv()" onLoad="insertRow()">
@@ -162,13 +134,14 @@
                                                value="sessionTerminationDataInput"/>
                                         <div class='col-md-12 form-group'>
                                             <table name="sessionData" id="sessionData"
-                                                   class="mdl-data-table  mdl-shadow--2dp"
+                                                   class="table table-bordered"
                                                    align="center">
                                                 <thead>
                                                 <tr>
-                                                    <th class="mdl-data-table__cell--non-numeric">Terminate</th>
-                                                    <th class="mdl-data-table__cell--non-numeric">User Agent</th>
-                                                    <th class="mdl-data-table__cell--non-numeric">Session
+                                                    <th>Terminate</th>
+                                                    <th>User Agent</th>
+                                                    <th>IP Address</th>
+                                                    <th>Session
                                                         starting time</th>
                                                 </tr>
                                                     <%
@@ -192,14 +165,17 @@
                                                             Date date = new Date(stamp.getTime());
                                                             String sessionId =
                                                             sessionDataItemValues.getString("sessionId");
+                                                            String remoteIp =
+                                                            String.valueOf(sessionDataItemValues.get("remoteIp"));
                                                     %>
                                                 
                                                 <tr>
                                                     <td><input type="checkbox"
                                                                name=<%=sessionId%> value=<%=sessionId%> />&nbsp;
                                                     </td>
-                                                    <td class="mdl-data-table__cell--non-numeric"><%= userAgent%></td>
-                                                    <td class="mdl-data-table__cell--non-numeric"><%= date %></td>
+                                                    <td ><%= userAgent%></td>
+                                                    <td ><%= remoteIp%></td>
+                                                    <td ><%= date %></td>
                                                 </tr>
                                                     <%
                                                         index++;
@@ -208,11 +184,10 @@
                                             </table>
                                             </br></br>
                                             <div  align="Center">
-                                            <button
-                                                    class="mdl-button mdl-js-button mdl-button--raised
-                                            mdl-js-ripple-effect"  onclick="$('#loading').show();">
-                                                Terminate and Proceed
-                                            </button></div>
+                                                <button
+                                                        onclick="$('#loading').show();">
+                                                    Terminate and Proceed
+                                                </button></div>
                                         </div>
                                     </div>
                                 </div>
