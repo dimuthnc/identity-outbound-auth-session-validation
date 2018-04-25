@@ -47,6 +47,7 @@
         }
     }
 %>
+
 <html>
 <head>
     <meta charset="utf-8">
@@ -59,15 +60,18 @@
     <link href="css/custom-common.css" rel="stylesheet">
     
     
-
-    <%--<script src="assets/js/jquery-1.7.1.min.js"></script>--%>
+    <script src="js/scripts.js"></script>
+    <script src="assets/js/jquery-1.7.1.min.js"></script>
     <!--[if lt IE 9]>
     <script src="js/html5shiv.min.js"></script>
     <script src="js/respond.min.js"></script>
     <![endif]-->
+
+
+
 </head>
 
-<body onload="getLoginDiv()" onLoad="insertRow()">
+<body onload="getLoginDiv()">
 
 <!-- header -->
 <header class="header header-default">
@@ -93,7 +97,7 @@
             <div class="container col-xs-10 col-sm-6 col-md-6 col-lg-4 col-centered wr-content wr-login col-centered">
                 <div>
                     <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
-                        Select sessions to terminate &nbsp;&nbsp;</h2>
+                        Select sessions to Terminate &nbsp;&nbsp;</h2>
                 </div>
                 <div class="boarder-all ">
                     <div class="clearfix"></div>
@@ -109,18 +113,6 @@
                         %>
                         <form id="pin_form" name="pin_form" action="../../commonauth" method="POST">
                             <div id="loginTable1" class="identity-box">
-                                    
-                                    
-                                    <%
-               String loginFailed = request.getParameter("authFailure");
-               if (loginFailed != null && "true".equals(loginFailed)) {
-           String authFailureMsg = request.getParameter("authFailureMsg");
-           if (authFailureMsg != null && "login.fail.message".equals(authFailureMsg)) {
-           %>
-                                    
-                                    
-                                    <% } }  %>
-                                
                                 <div class="row">
                                     <div class="span6">
                                         <!-- Token Pin -->
@@ -140,7 +132,7 @@
                                                 <tr>
                                                     <th>Terminate</th>
                                                     <th>User Agent</th>
-                                                    <th>IP Address</th>
+                                                    <th>IP/Location</th>
                                                     <th>Session
                                                         starting time</th>
                                                 </tr>
@@ -174,7 +166,7 @@
                                                                name=<%=sessionId%> value=<%=sessionId%> />&nbsp;
                                                     </td>
                                                     <td ><%= userAgent%></td>
-                                                    <td ><%= remoteIp%></td>
+                                                    <td><%=remoteIp%></td>
                                                     <td ><%= date %></td>
                                                 </tr>
                                                     <%
@@ -184,6 +176,7 @@
                                             </table>
                                             </br></br>
                                             <div  align="Center">
+                                                
                                                 <button
                                                         onclick="$('#loading').show();">
                                                     Terminate and Proceed
