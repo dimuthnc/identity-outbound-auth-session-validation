@@ -38,7 +38,6 @@ import org.wso2.carbon.identity.application.authentication.framework.config.Conf
 import org.wso2.carbon.identity.application.authentication.framework.config.model.StepConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
-import org.wso2.carbon.identity.application.authentication.framework.exception.LogoutFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.services.SessionManagementService;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
@@ -71,7 +70,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     @Override
     public AuthenticatorFlowStatus process(HttpServletRequest request,
                                            HttpServletResponse response, AuthenticationContext context)
-            throws AuthenticationFailedException{
+            throws AuthenticationFailedException {
 
         if (context.isLogoutRequest()) {
             return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
@@ -81,7 +80,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             try {
 
                 processAuthenticationResponse(request, response, context);
-            }catch (SessionValidationException e) {
+            } catch (SessionValidationException e) {
 
                 context.setRetrying(true);
                 context.setCurrentAuthenticator(getName());
@@ -137,7 +136,9 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                     if (context.isRetrying()) {
                         retryParam = "&authFailure=true&authFailureMsg=" + errorMessage;
                     }
-                    String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes))
+                    String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes)
+                            +"&sessionLimit="+String.valueOf(sessionMetaData.length())
+                            +"&terminateCount="+String.valueOf(sessionLimit))
                             + "&authenticators=" + getName() + ":" + SessionCountAuthenticatorConstants.AUTHENTICATOR_TYPE
                             + retryParam;
                     response.sendRedirect(encodedUrl);
@@ -174,12 +175,14 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     @Override
     protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response, AuthenticationContext context)
             throws AuthenticationFailedException {
-        try{
+
+        try {
             int closedSessionCount = 0;
             SessionManagementService sessionManagementService = new SessionManagementService();
             for (int index = 0; index < sessionMetaData.length(); index++) {
                 JSONObject session = new JSONObject(sessionMetaData.get(index).toString());
                 JSONObject sessionValues = new JSONObject(String.valueOf(session.get("values")));
+                log.info(request.getParameterMap().toString());
                 if (StringUtils.isNotEmpty(request.getParameter(String.valueOf(sessionValues.get("sessionId"))))) {
                     String sessionId = String.valueOf(sessionValues.get("sessionId"));
                     boolean isRemoved = sessionManagementService.removeSession(sessionId);
@@ -190,12 +193,11 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
                 }
             }
-            if (sessionMetaData.length()- closedSessionCount > sessionLimit) {
+            if (sessionMetaData.length() - closedSessionCount > sessionLimit) {
                 throw new SessionValidationException("Terminated session amount is not sufficient to continue");
             }
-        }
-        catch (Exception e){
-            throw new AuthenticationFailedException("Exception occurred in session termination. Please try again",e);
+        } catch (Exception e) {
+            throw new AuthenticationFailedException("Exception occurred in session termination. Please try again", e);
         }
 
     }
