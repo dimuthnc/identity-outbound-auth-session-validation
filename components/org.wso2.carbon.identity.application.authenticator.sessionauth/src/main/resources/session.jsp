@@ -19,13 +19,12 @@
 <%@page import="org.apache.commons.ssl.Base64" %>
 <%@page import="org.json.JSONArray" %>
 <%@page import="org.json.JSONObject" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="java.util.Date" %>
-<%@ page import="java.sql.Timestamp" %>
-<%@ page import="java.util.Map" %>
-<%@page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
 <%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
+<%@ page import="java.sql.Timestamp" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="static java.lang.Math.round" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
 <%
     request.getSession().invalidate();
@@ -62,11 +61,32 @@
     
     <script src="js/scripts.js"></script>
     <script src="assets/js/jquery-1.7.1.min.js"></script>
+    <script>
+        function onSelectAllChecked() {
+            var checked = document.getElementById("selectAll").checked;
+            if(checked){
+                var table = document.getElementById("sessionData");
+                for (var i = 0, row; row = table.rows[i]; i++) {
+                    var checkbox = document.getElementById(i.toString());
+                    checkbox.checked = true;
+                
+                }
+            }
+            else{
+                var table = document.getElementById("sessionData");
+                for (var i = 0, row; row = table.rows[i]; i++) {
+                    var checkbox = document.getElementById(i.toString());
+                    checkbox.checked = false;
+
+                }
+            }
+
+        }
+    </script>
     <!--[if lt IE 9]>
     <script src="js/html5shiv.min.js"></script>
     <script src="js/respond.min.js"></script>
     <![endif]-->
-
 
 
 </head>
@@ -108,9 +128,14 @@
                         %>
                         <div class="alert alert-danger" id="failed-msg">
                             <%=errorMessage%>
-                        </div>
-                        <% }
+                        
+                        <%
+                            }
                         %>
+                        </div>
+                        <div class="alert alert-danger" >
+                            You have exceeded number of sessions x, Please terminate at-least y in order to proceed..
+                        </div>
                         <form id="pin_form" name="pin_form" action="../../commonauth" method="POST">
                             <div id="loginTable1" class="identity-box">
                                 <div class="row">
@@ -130,15 +155,22 @@
                                                    align="center">
                                                 <thead>
                                                 <tr>
-                                                    <th>Terminate</th>
+                                                    <th><input type="checkbox"
+                                                               name="name" id="selectAll"
+                                                               onclick="onSelectAllChecked()">
+                                                        Terminate
+                                                    </th>
                                                     <th>User Agent</th>
                                                     <th>IP/Location</th>
                                                     <th>Session
-                                                        starting time</th>
+                                                        starting time
+                                                    </th>
+                                                    <th>Last Access Time</th>
                                                 </tr>
                                                     <%
                                                         JSONObject sessionDataItem;
                                                         JSONObject sessionDataItemValues;
+                                                        long currentTime = System.currentTimeMillis();
                                                         int index = 0;
                                                         while (index < sessionDataArray.length()){
                                                             sessionDataItem = new
@@ -159,15 +191,34 @@
                                                             sessionDataItemValues.getString("sessionId");
                                                             String remoteIp =
                                                             String.valueOf(sessionDataItemValues.get("remoteIp"));
+                                                            long timeDiff = currentTime -Long.parseLong(timestamp);
+                                                            String lastAccessed =null;
+                                                            if(timeDiff<60000){
+                                                                lastAccessed =String.valueOf(round(timeDiff/1000))+
+                                                                " Seconds ago";
+                                                            }
+                                                            else if(timeDiff<3600000){
+                                                                lastAccessed =String.valueOf(round(timeDiff/60000))+
+                                                                " Minutes ago";
+                                                            }
+                                                            else if(timeDiff<86400000){
+                                                                lastAccessed =String.valueOf(round(timeDiff/3600000))+
+                                                                " Hours ago";
+                                                            }
                                                     %>
                                                 
                                                 <tr>
                                                     <td><input type="checkbox"
-                                                               name=<%=sessionId%> value=<%=sessionId%> />&nbsp;
+                                                               name=<%=sessionId%> value=<%=sessionId%>
+                                                               id=<%=index%> />&nbsp;
                                                     </td>
-                                                    <td ><%= userAgent%></td>
-                                                    <td><%=remoteIp%></td>
-                                                    <td ><%= date %></td>
+                                                    <td><%= userAgent%>
+                                                    </td>
+                                                    <td><%=remoteIp%>
+                                                    </td>
+                                                    <td><%= date %>
+                                                    </td>
+                                                    <td><%=lastAccessed%></td>
                                                 </tr>
                                                     <%
                                                         index++;
@@ -180,7 +231,8 @@
                                                 <button
                                                         onclick="$('#loading').show();">
                                                     Terminate and Proceed
-                                                </button></div>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
