@@ -117,15 +117,16 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             try {
                 sessionMetaData = getSessionDetails(authenticatedUser);
                 sessionLimit = getAllowedSessionLimit(context, sessionMetaData.length());
-                byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes());
+                byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes(Charset.forName("UTF-8")));
                 String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                         context.getCallerSessionKey(), context.getContextIdentifier());
                 String retryParam = "";
                 if (context.isRetrying()) {
                     retryParam = "&authFailure=true&authFailureMsg=" + errorMessage;
                 }
-                String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes)
-                        + "&sessionLimit=" + String.valueOf(sessionMetaData.length())
+                String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes,
+                        "UTF-8") +
+                        "&sessionLimit=" + String.valueOf(sessionMetaData.length())
                         + "&terminateCount=" + String.valueOf(sessionLimit))
                         + "&authenticators=" + getName() + ":" + SessionCountAuthenticatorConstants.AUTHENTICATOR_TYPE
                         + retryParam;
@@ -235,7 +236,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
                 username +
                 SessionCountAuthenticatorConstants.AND_TAG +
-                SessionCountAuthenticatorConstants.USERSTORE_TAG +
+                SessionCountAuthenticatorConstants.USER_STORE_TAG +
                 SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
                 userStore +
                 SessionCountAuthenticatorConstants.QUOTE;
@@ -273,7 +274,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         String toEncode = SessionCountAuthenticatorConstants.USERNAME_CONFIG
                 + SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR
                 + SessionCountAuthenticatorConstants.PASSWORD_CONFIG;
-        byte[] encoding = Base64.encodeBase64(toEncode.getBytes());
+        byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName("UTF-8")));
         String authHeader = new String(encoding, Charset.defaultCharset());
         httpRequest.addHeader(HTTPConstants.HEADER_AUTHORIZATION, SessionCountAuthenticatorConstants.AUTH_TYPE_KEY +
                 authHeader);
@@ -309,6 +310,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 responseResult.append(line);
             }
             responseJsonObject = new JSONArray(responseResult.toString());
+            bufferedReader.close();
         } else {
             log.error("Failed to retrieve data from endpoint. Error code :" +
                     httpResponse.getStatusLine().getStatusCode());
