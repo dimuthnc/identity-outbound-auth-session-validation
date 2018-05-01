@@ -34,8 +34,6 @@
     String errorMessage = "Authentication Failed! Please Retry";
     String authenticationFailed = "false";
     
-    
-    
     byte[] sessionDataEncoded = request.getParameter("sessionData").getBytes("UTF-8");
     String sessionLimit = request.getParameter("sessionLimit");
     String terminateCount = request.getParameter("terminateCount");
@@ -120,64 +118,65 @@
 <div class="container-fluid body-wrapper">
     
     <div class="row">
-            <!-- content -->
-            <div class="container col-xs-10 col-sm-9 col-md-9 col-lg-6 col-centered wr-content wr-login col-centered">
-                <div>
-                    <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
-                        Select sessions to Terminate &nbsp;&nbsp;</h2>
-                </div>
-                <div class="boarder-all ">
-                    <div class="clearfix"></div>
-                    <div class="padding-double login-form">
-                        <div id="errorDiv"></div>
+        <!-- content -->
+        <div class="container col-xs-10 col-sm-9 col-md-9 col-lg-6 col-centered wr-content wr-login col-centered">
+            <div>
+                <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
+                    Select sessions to Terminate &nbsp;&nbsp;</h2>
+            </div>
+            <div class="boarder-all ">
+                <div class="clearfix"></div>
+                <div class="padding-double login-form">
+                    <div id="errorDiv"></div>
+                    <%
+                        if ("true".equals(authenticationFailed)) {
+                    %>
+                    <div class="alert alert-danger" id="failed-msg">
+                        <%=errorMessage%>
+                        
                         <%
-                            if ("true".equals(authenticationFailed)) {
+                            }
                         %>
-                        <div class="alert alert-danger" id="failed-msg">
-                            <%=errorMessage%>
-                            
-                            <%
-                                }
-                            %>
-                        </div>
-                        <div class="alert alert-danger col-md-10 form-group col-centered">
-                            You have reached the maximum allowed session limit <%=sessionLimit%>, Please
-                            terminate at-least
-                            <%=terminateCount%> in order to proceed.
-                            
-                        </div></br>
-                        <form id="pin_form" name="pin_form" action="../../commonauth" method="POST">
-                            <div id="loginTable1" class="identity-box">
-                                <div class="row">
-                                    <div class="span6">
-                                        <!-- Token Pin -->
-                                        <div class="control-group">
-                                        
-                                        </div>
-                                        
-                                        <input type="hidden" name="sessionDataKey"
-                                               value='<%=request.getParameter("sessionDataKey")%>'/>
-                                        <input type="hidden" name="sessionTerminationDataInput"
-                                               value="sessionTerminationDataInput"/>
-                                        <div class='col-md-10 form-group col-centered'>
-                                            <table name="sessionData" id="sessionData"
-                                                   class="table table-bordered"
-                                                   align="center">
-                                                <thead>
-                                                <tr>
-                                                    <th><input type="checkbox"
-                                                               name="name" id="selectAll"
-                                                               onclick="onSelectAllChecked()">
-                                                        Terminate
-                                                    </th>
-                                                    <th>User Agent</th>
-                                                    <th>IP/Location</th>
-                                                    <th>Session
-                                                        starting time
-                                                    </th>
-                                                    <th>Last Access Time</th>
-                                                </tr>
-                                                    <%
+                    </div>
+                    <div class="alert alert-danger col-md-10 form-group col-centered">
+                        You have reached the maximum allowed session limit <%=sessionLimit%>, Please
+                        terminate at-least
+                        <%=terminateCount%> in order to proceed.
+                    
+                    </div>
+                    </br>
+                    <form id="pin_form" name="pin_form" action="../../commonauth" method="POST">
+                        <div id="loginTable1" class="identity-box">
+                            <div class="row">
+                                <div class="span6">
+                                    <!-- Token Pin -->
+                                    <div class="control-group">
+                                    
+                                    </div>
+                                    
+                                    <input type="hidden" name="sessionDataKey"
+                                           value='<%=request.getParameter("sessionDataKey")%>'/>
+                                    <input type="hidden" name="sessionTerminationDataInput"
+                                           value="sessionTerminationDataInput"/>
+                                    <div class='col-md-10 form-group col-centered'>
+                                        <table name="sessionData" id="sessionData"
+                                               class="table table-bordered"
+                                               align="center">
+                                            <thead>
+                                            <tr>
+                                                <th><input type="checkbox"
+                                                           name="name" id="selectAll"
+                                                           onclick="onSelectAllChecked()">
+                                                    Terminate
+                                                </th>
+                                                <th>User Agent</th>
+                                                <th>IP/Location</th>
+                                                <th>Session
+                                                    starting time
+                                                </th>
+                                                <th>Last Access Time</th>
+                                            </tr>
+                                                <%
                                                         long currentTime = System.currentTimeMillis();
                                                         JSONObject sessionDataItem;
                                                         JSONObject sessionDataItemValues;
@@ -207,48 +206,48 @@
                                                             Long.parseLong(lastAccessTime));
                                                             
                                                     %>
-                                                
-                                                <tr>
-                                                    <td><input type="checkbox"
-                                                               name=<%=sessionId%> value=<%=sessionId%>
-                                                               id=<%=index%> >&nbsp;
-                                                    </td>
-                                                    <td id="agent<%=sessionId%>"><%= userAgent%><a
-                                                            href="javascript:showMore('<%=sessionId%>','<%=userAgentFullText%>');"> </br>
-                                                        show
-                                                        More</a>
-                                                    </td>
-                                                    <td><%=remoteIp%>
-                                                    </td>
-                                                    <td><%= startedTime %>
-                                                    </td>
-                                                    <td><%=lastAccessedTime%>
-                                                    </td>
-                                                </tr>
-                                                    <%
+                                            
+                                            <tr>
+                                                <td><input type="checkbox"
+                                                           name=<%=sessionId%> value=<%=sessionId%>
+                                                           id=<%=index%>>&nbsp;
+                                                </td>
+                                                <td id="agent<%=sessionId%>"><%= userAgent%><a
+                                                        href="javascript:showMore('<%=sessionId%>','<%=userAgentFullText%>');"> </br>
+                                                    show
+                                                    More</a>
+                                                </td>
+                                                <td><%=remoteIp%>
+                                                </td>
+                                                <td><%= startedTime %>
+                                                </td>
+                                                <td><%=lastAccessedTime%>
+                                                </td>
+                                            </tr>
+                                                <%
                                                         index++;
                                                         }
                                                     %>
-                                            </table>
-                                            </br></br>
-                                            <div align="Center">
-                                                
-                                                <button
-                                                        onclick="$('#loading').show();" class="btn btn-primary">
-                                                    Terminate and Proceed
-                                                </button>
-                                            </div>
+                                        </table>
+                                        </br></br>
+                                        <div align="Center">
+                                            
+                                            <button
+                                                    onclick="$('#loading').show();" class="btn btn-primary">
+                                                Terminate and Proceed
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </form>
-                    
-                    </div>
+                        </div>
+                    </form>
+                
                 </div>
-                <!-- /content -->
-            
             </div>
+            <!-- /content -->
+        
+        </div>
         
         <!-- /content/body -->
     

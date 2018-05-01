@@ -24,7 +24,6 @@ import org.wso2.carbon.identity.application.authentication.framework.Application
 import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticator;
 import org.wso2.carbon.user.core.service.RealmService;
 
-
 /**
  * @scr.component name="identity.application.authenticator.sessionauth.component" immediate="true"
  * @scr.reference name="realm.service"
@@ -38,15 +37,18 @@ public class SessionAuthenticatorServiceComponent {
     private static RealmService realmService;
 
     public static RealmService getRealmService() {
+
         return realmService;
     }
 
     protected void setRealmService(RealmService realmService) {
+
         log.debug("Setting the Realm Service");
         SessionAuthenticatorServiceComponent.realmService = realmService;
     }
 
     protected void activate(ComponentContext ctxt) {
+
         try {
             SessionCountAuthenticator sessionCountAuthenticator = new SessionCountAuthenticator();
             ctxt.getBundleContext().registerService(ApplicationAuthenticator.class.getName(), sessionCountAuthenticator, null);
@@ -59,12 +61,14 @@ public class SessionAuthenticatorServiceComponent {
     }
 
     protected void deactivate(ComponentContext ctxt) {
+
         if (log.isDebugEnabled()) {
             log.info("SessionCountAuthenticator bundle is deactivated");
         }
     }
 
     protected void unsetRealmService(RealmService realmService) {
+
         log.debug("UnSetting the Realm Service");
         SessionAuthenticatorServiceComponent.realmService = null;
     }

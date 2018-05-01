@@ -44,7 +44,6 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final String AND_TAG = " AND ";
     public static final String SESSION_TERMINATION_SERVLET_INPUT = "sessionTerminationDataInput";
 
-
     public static final String TABLE_SEARCH_URL = "https://localhost:9444/analytics/search";
 
     public static final int START_INDEX = 0;
@@ -55,7 +54,6 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final String LOGIN_STANDARD_PAGE = "login.do";
     public static final String SESSION_TERMINATION_ENFORCER_PAGE = "session.jsp";
     public static final String AUTHENTICATOR_TYPE = "LOCAL";
-
 
     private SessionCountAuthenticatorConstants() {
 
