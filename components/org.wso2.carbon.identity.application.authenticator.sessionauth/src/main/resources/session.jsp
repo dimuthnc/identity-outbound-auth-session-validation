@@ -34,7 +34,7 @@
     String errorMessage = "Authentication Failed! Please Retry";
     String authenticationFailed = "false";
     
-    long currentTime = System.currentTimeMillis();
+    
     
     byte[] sessionDataEncoded = request.getParameter("sessionData").getBytes("UTF-8");
     String sessionLimit = request.getParameter("sessionLimit");
@@ -76,7 +76,6 @@
                 for (var i = 0, row; row = table.rows[i]; i++) {
                     var checkbox = document.getElementById(i.toString());
                     checkbox.checked = true;
-
                 }
             }
             else {
@@ -84,10 +83,8 @@
                 for (var i = 0, row; row = table.rows[i]; i++) {
                     var checkbox = document.getElementById(i.toString());
                     checkbox.checked = false;
-
                 }
             }
-
         }
 
         function showMore(id, text) {
@@ -103,7 +100,7 @@
 
 </head>
 
-<body onload="getLoginDiv()">
+<body>
 
 <!-- header -->
 <header class="header header-default">
@@ -124,7 +121,7 @@
     
     <div class="row">
             <!-- content -->
-            <div class="container col-xs-20 col-sm-12 col-md-12 col-lg-8 col-centered wr-content wr-login col-centered">
+            <div class="container col-xs-10 col-sm-9 col-md-9 col-lg-6 col-centered wr-content wr-login col-centered">
                 <div>
                     <h2 class="wr-title blue-bg padding-double white boarder-bottom-blue margin-none">
                         Select sessions to Terminate &nbsp;&nbsp;</h2>
@@ -181,6 +178,7 @@
                                                     <th>Last Access Time</th>
                                                 </tr>
                                                     <%
+                                                        long currentTime = System.currentTimeMillis();
                                                         JSONObject sessionDataItem;
                                                         JSONObject sessionDataItemValues;
                                                         int index = 0;
@@ -213,7 +211,7 @@
                                                 <tr>
                                                     <td><input type="checkbox"
                                                                name=<%=sessionId%> value=<%=sessionId%>
-                                                               id=<%=index%>/>&nbsp;
+                                                               id=<%=index%> >&nbsp;
                                                     </td>
                                                     <td id="agent<%=sessionId%>"><%= userAgent%><a
                                                             href="javascript:showMore('<%=sessionId%>','<%=userAgentFullText%>');"> </br>

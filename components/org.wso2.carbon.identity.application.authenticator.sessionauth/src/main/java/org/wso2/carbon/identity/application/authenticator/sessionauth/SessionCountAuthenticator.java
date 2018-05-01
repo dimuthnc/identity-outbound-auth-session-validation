@@ -51,7 +51,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Username Password based Authenticator
+ * Session count based authenticator
  */
 public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         implements LocalApplicationAuthenticator {
@@ -111,42 +111,25 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         if (authenticatedUser == null) {
             throw new AuthenticationFailedException("Authentication failed!. Failed to identify the user");
         }
-
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof
                 LocalApplicationAuthenticator) {
-            HttpClient httpClient = httpClientBuilder.build();
-
-            String loginPage = ConfigurationFacade.getInstance().getAuthenticationEndpointURL()
-                    .replace(SessionCountAuthenticatorConstants.LOGIN_STANDARD_PAGE,
-                            SessionCountAuthenticatorConstants.SESSION_TERMINATION_ENFORCER_PAGE);
-
+            String loginPage = getLoginPageURL();
             try {
-                HttpPost httpPost = createHttpRequest(authenticatedUser);
-                HttpResponse httpResponse = httpClient.execute(httpPost);
-                if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-
-                    sessionMetaData = getJsonArrayFromHttpResponse(httpResponse);
-                    sessionLimit = getAllowedSessionLimit(context, sessionMetaData.length());
-                    byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes());
-                    String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
-                            context.getCallerSessionKey(), context.getContextIdentifier());
-
-                    String retryParam = "";
-                    if (context.isRetrying()) {
-                        retryParam = "&authFailure=true&authFailureMsg=" + errorMessage;
-                    }
-                    String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes)
-                            +"&sessionLimit="+String.valueOf(sessionMetaData.length())
-                            +"&terminateCount="+String.valueOf(sessionLimit))
-                            + "&authenticators=" + getName() + ":" + SessionCountAuthenticatorConstants.AUTHENTICATOR_TYPE
-                            + retryParam;
-                    response.sendRedirect(encodedUrl);
-
-                } else {
-                    log.error("Failed to retrieve data from endpoint. Error code :" +
-                            httpResponse.getStatusLine().getStatusCode());
+                sessionMetaData = getSessionDetails(authenticatedUser);
+                sessionLimit = getAllowedSessionLimit(context, sessionMetaData.length());
+                byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes());
+                String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
+                        context.getCallerSessionKey(), context.getContextIdentifier());
+                String retryParam = "";
+                if (context.isRetrying()) {
+                    retryParam = "&authFailure=true&authFailureMsg=" + errorMessage;
                 }
+                String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes)
+                        + "&sessionLimit=" + String.valueOf(sessionMetaData.length())
+                        + "&terminateCount=" + String.valueOf(sessionLimit))
+                        + "&authenticators=" + getName() + ":" + SessionCountAuthenticatorConstants.AUTHENTICATOR_TYPE
+                        + retryParam;
+                response.sendRedirect(encodedUrl);
                 context.setCurrentAuthenticator(getName());
                 return AuthenticatorFlowStatus.INCOMPLETE;
 
@@ -157,6 +140,13 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
     }
 
+    /**
+     * Method to retrieve the number of allowed sessions defined by the admin.
+     *
+     * @param context            Context object
+     * @param activeSessionCount current active session Limit
+     * @return integer indicating the allowed session limit
+     */
     private int getAllowedSessionLimit(AuthenticationContext context, int activeSessionCount) {
 
         int sessionLimit = activeSessionCount - 1;
@@ -226,6 +216,14 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         return SessionCountAuthenticatorConstants.AUTHENTICATOR_NAME;
     }
 
+    /**
+     * Method to create the query to pass to get session details
+     *
+     * @param tenantDomain tenant domain the user belong to
+     * @param username     username of the user
+     * @param userStore    userstore of the user
+     * @return Query string
+     */
     private String getQuery(String tenantDomain, String username, String userStore) {
 
         return SessionCountAuthenticatorConstants.QUOTE +
@@ -243,6 +241,12 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 SessionCountAuthenticatorConstants.QUOTE;
     }
 
+    /**
+     * Method to create HTTP Request
+     *
+     * @param authenticatedUser AuthenticatedUser object for the user
+     * @return HttpPost request object
+     */
     private HttpPost createHttpRequest(AuthenticatedUser authenticatedUser) {
 
         String data = "{" +
@@ -259,7 +263,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 SessionCountAuthenticatorConstants.START_INDEX + "," +
                 SessionCountAuthenticatorConstants.COUNT_TAG +
                 SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                5 +
+                SessionCountAuthenticatorConstants.SESSION_COUNT_MAX +
                 "}";
 
         StringEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
@@ -279,11 +283,23 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
     }
 
-    private JSONArray getJsonArrayFromHttpResponse(HttpResponse httpResponse) {
+    /**
+     * Method to retrieve session data from session data source
+     *
+     * @param authenticatedUser AuthenticatedUser object that represent the user
+     * @return JSON array with each element describing active session
+     * @throws IOException
+     */
+    private JSONArray getSessionDetails(AuthenticatedUser authenticatedUser) throws IOException {
 
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
+        HttpClient httpClient = httpClientBuilder.build();
+        HttpPost httpPost = createHttpRequest(authenticatedUser);
+        HttpResponse httpResponse = httpClient.execute(httpPost);
         JSONArray responseJsonObject = new JSONArray();
-        BufferedReader bufferedReader;
-        try {
+        if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+
+            BufferedReader bufferedReader;
             bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity()
                     .getContent(),
                     SessionCountAuthenticatorConstants.UTF_8_TAG));
@@ -293,10 +309,23 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 responseResult.append(line);
             }
             responseJsonObject = new JSONArray(responseResult.toString());
-        } catch (IOException e) {
-            //TODO
+        } else {
+            log.error("Failed to retrieve data from endpoint. Error code :" +
+                    httpResponse.getStatusLine().getStatusCode());
         }
         return responseJsonObject;
+    }
+
+    /**
+     * Method to retrieve custom login page for the authenticator
+     *
+     * @return custom login page of authenticator
+     */
+    private String getLoginPageURL() {
+
+        return ConfigurationFacade.getInstance().getAuthenticationEndpointURL().replace(
+                SessionCountAuthenticatorConstants.LOGIN_STANDARD_PAGE,
+                SessionCountAuthenticatorConstants.SESSION_TERMINATION_ENFORCER_PAGE);
     }
 
 }
