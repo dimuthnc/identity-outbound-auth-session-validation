@@ -167,7 +167,6 @@
                                                 <th><input type="checkbox"
                                                            name="name" id="selectAll"
                                                            onclick="onSelectAllChecked()">
-                                                    Terminate
                                                 </th>
                                                 <th>User Agent</th>
                                                 <th>IP/Location</th>

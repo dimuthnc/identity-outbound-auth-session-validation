@@ -104,7 +104,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     private AuthenticatorFlowStatus initiateAuthRequest(HttpServletResponse response, AuthenticationContext context,
                                                         String errorMessage)
             throws AuthenticationFailedException {
-
+        //Identifying the authenticated user from the previous step
         StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
         AuthenticatedUser authenticatedUser = stepConfig.getAuthenticatedUser();
 
@@ -136,6 +136,8 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
             } catch (IOException e) {
                 log.error("Problem occurred in redirecting to the session termination page", e);
+            } catch (SessionValidationException e) {
+                throw new AuthenticationFailedException("Failed to retrieve session metadata", e);
             }
         }
         return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
@@ -164,7 +166,8 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     }
 
     @Override
-    protected void processAuthenticationResponse(HttpServletRequest request, HttpServletResponse response, AuthenticationContext context)
+    protected void processAuthenticationResponse(HttpServletRequest request,
+                                                 HttpServletResponse response, AuthenticationContext context)
             throws AuthenticationFailedException {
 
         try {
@@ -173,7 +176,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             for (int index = 0; index < sessionMetaData.length(); index++) {
                 JSONObject session = new JSONObject(sessionMetaData.get(index).toString());
                 JSONObject sessionValues = new JSONObject(String.valueOf(session.get("values")));
-                log.info(request.getParameterMap().toString());
                 if (StringUtils.isNotEmpty(request.getParameter(String.valueOf(sessionValues.get("sessionId"))))) {
                     String sessionId = String.valueOf(sessionValues.get("sessionId"));
                     boolean isRemoved = sessionManagementService.removeSession(sessionId);
@@ -188,7 +190,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 throw new SessionValidationException("Terminated session amount is not sufficient to continue");
             }
         } catch (Exception e) {
-            throw new AuthenticationFailedException("Exception occurred in session termination. Please try again", e);
+            throw new SessionValidationException("Exception occurred in session termination. Please try again", e);
         }
 
     }
@@ -270,12 +272,14 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         StringEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
 
         HttpPost httpRequest = new HttpPost(SessionCountAuthenticatorConstants.TABLE_SEARCH_URL);
-
+        //TODO
+        //This username and password configurations should move to a configuration file and read from there
         String toEncode = SessionCountAuthenticatorConstants.USERNAME_CONFIG
                 + SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR
                 + SessionCountAuthenticatorConstants.PASSWORD_CONFIG;
         byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName("UTF-8")));
         String authHeader = new String(encoding, Charset.defaultCharset());
+        //Adding headers to request
         httpRequest.addHeader(HTTPConstants.HEADER_AUTHORIZATION, SessionCountAuthenticatorConstants.AUTH_TYPE_KEY +
                 authHeader);
         httpRequest.addHeader(SessionCountAuthenticatorConstants.CONTENT_TYPE_TAG, "application/json");
@@ -289,15 +293,17 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
      *
      * @param authenticatedUser AuthenticatedUser object that represent the user
      * @return JSON array with each element describing active session
-     * @throws IOException
+     * @throws IOException                When it fails to read response from the REST call
+     * @throws SessionValidationException when REST response is not in state 200
      */
-    private JSONArray getSessionDetails(AuthenticatedUser authenticatedUser) throws IOException {
+    private JSONArray getSessionDetails(AuthenticatedUser authenticatedUser) throws
+            IOException, SessionValidationException {
 
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         HttpClient httpClient = httpClientBuilder.build();
         HttpPost httpPost = createHttpRequest(authenticatedUser);
         HttpResponse httpResponse = httpClient.execute(httpPost);
-        JSONArray responseJsonObject = new JSONArray();
+        JSONArray responseJsonArray;
         if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
             BufferedReader bufferedReader;
@@ -309,13 +315,13 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             while ((line = bufferedReader.readLine()) != null) {
                 responseResult.append(line);
             }
-            responseJsonObject = new JSONArray(responseResult.toString());
+            responseJsonArray = new JSONArray(responseResult.toString());
             bufferedReader.close();
         } else {
-            log.error("Failed to retrieve data from endpoint. Error code :" +
+            throw new SessionValidationException("Failed to retrieve data from endpoint. Error code :" +
                     httpResponse.getStatusLine().getStatusCode());
         }
-        return responseJsonObject;
+        return responseJsonArray;
     }
 
     /**
