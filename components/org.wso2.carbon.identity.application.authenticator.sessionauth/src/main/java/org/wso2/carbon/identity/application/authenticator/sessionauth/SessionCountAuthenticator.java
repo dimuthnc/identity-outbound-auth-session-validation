@@ -50,6 +50,8 @@ import java.nio.charset.Charset;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static java.lang.Integer.parseInt;
+
 /**
  * Session count based authenticator
  */
@@ -85,7 +87,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 context.setRetrying(true);
                 context.setCurrentAuthenticator(getName());
                 return initiateAuthRequest(response, context,
-                        "Exception occurred in session termination process");
+                        "Exception occurred in session termination process. Please try again");
             }
             return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
         } else {
@@ -136,6 +138,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
             } catch (IOException e) {
                 log.error("Problem occurred in redirecting to the session termination page", e);
+                throw new AuthenticationFailedException("Problem occurred in redirecting to the session termination page", e);
             } catch (SessionValidationException e) {
                 throw new AuthenticationFailedException("Failed to retrieve session metadata", e);
             }
@@ -156,7 +159,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         Object sessionLimitObject = context.getProperty(SessionCountAuthenticatorConstants.SESSION_LIMIT_TAG);
         if (sessionLimitObject != null) {
             try {
-                sessionLimit = Integer.valueOf(sessionLimitObject.toString());
+                sessionLimit = parseInt(sessionLimitObject.toString());
             } catch (NumberFormatException e) {
                 log.error("Invalid string value found as session Limit", e);
 
