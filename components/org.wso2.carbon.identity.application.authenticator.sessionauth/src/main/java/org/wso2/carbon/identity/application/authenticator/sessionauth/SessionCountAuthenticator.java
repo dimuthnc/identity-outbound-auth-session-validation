@@ -30,7 +30,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.wso2.carbon.identity.application.authentication.framework.AbstractApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.LocalApplicationAuthenticator;
@@ -47,6 +46,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -60,8 +64,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
     private static final long serialVersionUID = 1819664539416029245L;
     private static final Log log = LogFactory.getLog(SessionCountAuthenticator.class);
-    private static JSONArray sessionMetaData = new JSONArray();
-    private static int sessionLimit;
 
     @Override
     public boolean canHandle(HttpServletRequest request) {
@@ -80,10 +82,8 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         if (StringUtils.isNotEmpty(request.getParameter(
                 SessionCountAuthenticatorConstants.SESSION_TERMINATION_SERVLET_INPUT))) {
             try {
-
                 processAuthenticationResponse(request, response, context);
             } catch (SessionValidationException e) {
-
                 context.setRetrying(true);
                 context.setCurrentAuthenticator(getName());
                 return initiateAuthRequest(response, context,
@@ -104,8 +104,8 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
      * @param errorMessage contains error message of previous attempt if this is a retry attempt.
      */
     private AuthenticatorFlowStatus initiateAuthRequest(HttpServletResponse response, AuthenticationContext context,
-                                                        String errorMessage)
-            throws AuthenticationFailedException {
+                                                        String errorMessage) throws AuthenticationFailedException {
+
         //Identifying the authenticated user from the previous step
         StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
         AuthenticatedUser authenticatedUser = stepConfig.getAuthenticatedUser();
@@ -113,13 +113,15 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         if (authenticatedUser == null) {
             throw new AuthenticationFailedException("Authentication failed!. Failed to identify the user");
         }
+
         if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof
                 LocalApplicationAuthenticator) {
             String loginPage = getLoginPageURL();
             try {
-                sessionMetaData = getSessionDetails(authenticatedUser);
-                sessionLimit = getAllowedSessionLimit(context, sessionMetaData.length());
-                byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes(Charset.forName("UTF-8")));
+                JSONArray sessionMetaData = getSessionDetails(authenticatedUser);
+                int sessionLimit = getAllowedSessionLimit(context, sessionMetaData.length());
+                byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes(Charset.forName(
+                        StandardCharsets.UTF_8.name())));
                 String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
                         context.getCallerSessionKey(), context.getContextIdentifier());
                 String retryParam = "";
@@ -127,7 +129,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                     retryParam = "&authFailure=true&authFailureMsg=" + errorMessage;
                 }
                 String encodedUrl = loginPage + ("?" + queryParams + "&sessionData=" + new String(encodedBytes,
-                        "UTF-8") +
+                        StandardCharsets.UTF_8.name()) +
                         "&sessionLimit=" + String.valueOf(sessionMetaData.length())
                         + "&terminateCount=" + String.valueOf(sessionLimit))
                         + "&authenticators=" + getName() + ":" + SessionCountAuthenticatorConstants.AUTHENTICATOR_TYPE
@@ -157,12 +159,12 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
         int sessionLimit = activeSessionCount - 1;
         Object sessionLimitObject = context.getProperty(SessionCountAuthenticatorConstants.SESSION_LIMIT_TAG);
+
         if (sessionLimitObject != null) {
             try {
                 sessionLimit = parseInt(sessionLimitObject.toString());
             } catch (NumberFormatException e) {
                 log.error("Invalid string value found as session Limit", e);
-
             }
         }
         return sessionLimit;
@@ -172,30 +174,21 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     protected void processAuthenticationResponse(HttpServletRequest request,
                                                  HttpServletResponse response, AuthenticationContext context)
             throws AuthenticationFailedException {
-
-        try {
-            int closedSessionCount = 0;
-            SessionManagementService sessionManagementService = new SessionManagementService();
-            for (int index = 0; index < sessionMetaData.length(); index++) {
-                JSONObject session = new JSONObject(sessionMetaData.get(index).toString());
-                JSONObject sessionValues = new JSONObject(String.valueOf(session.get("values")));
-                if (StringUtils.isNotEmpty(request.getParameter(String.valueOf(sessionValues.get("sessionId"))))) {
-                    String sessionId = String.valueOf(sessionValues.get("sessionId"));
-                    boolean isRemoved = sessionManagementService.removeSession(sessionId);
-                    if (isRemoved) {
-                        closedSessionCount++;
-                        log.info("Session with Session ID :" + sessionId + " removed as requested.");
-                    }
-
-                }
+        int closedSessionCount = 0;
+        int sessionLimit = parseInt(request.getParameter("sessionLimit"));
+        int activeSessionCount = parseInt(request.getParameter("activeSessionCount"));
+        SessionManagementService sessionManagementService = new SessionManagementService();
+        ArrayList<String> sessionIDList = getSelectedSessionIDs(request.getParameterMap());
+        for (String sessionId : sessionIDList) {
+            boolean isRemoved = sessionManagementService.removeSession(sessionId);
+            if (isRemoved) {
+                closedSessionCount++;
+                log.info("Session with Session ID :" + sessionId + " removed as requested.");
             }
-            if (sessionMetaData.length() - closedSessionCount > sessionLimit) {
-                throw new SessionValidationException("Terminated session amount is not sufficient to continue");
-            }
-        } catch (Exception e) {
-            throw new SessionValidationException("Exception occurred in session termination. Please try again", e);
         }
-
+        if (activeSessionCount - closedSessionCount > sessionLimit) {
+            throw new SessionValidationException("Terminated session amount is not sufficient to continue");
+        }
     }
 
     @Override
@@ -280,7 +273,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         String toEncode = SessionCountAuthenticatorConstants.USERNAME_CONFIG
                 + SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR
                 + SessionCountAuthenticatorConstants.PASSWORD_CONFIG;
-        byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName("UTF-8")));
+        byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName(StandardCharsets.UTF_8.name())));
         String authHeader = new String(encoding, Charset.defaultCharset());
         //Adding headers to request
         httpRequest.addHeader(HTTPConstants.HEADER_AUTHORIZATION, SessionCountAuthenticatorConstants.AUTH_TYPE_KEY +
@@ -288,7 +281,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         httpRequest.addHeader(SessionCountAuthenticatorConstants.CONTENT_TYPE_TAG, "application/json");
         httpRequest.setEntity(entity);
         return httpRequest;
-
     }
 
     /**
@@ -307,12 +299,12 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         HttpPost httpPost = createHttpRequest(authenticatedUser);
         HttpResponse httpResponse = httpClient.execute(httpPost);
         JSONArray responseJsonArray;
-        if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
+        if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
             BufferedReader bufferedReader;
             bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity()
                     .getContent(),
-                    SessionCountAuthenticatorConstants.UTF_8_TAG));
+                    StandardCharsets.UTF_8.name()));
             StringBuilder responseResult = new StringBuilder();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -337,6 +329,20 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         return ConfigurationFacade.getInstance().getAuthenticationEndpointURL().replace(
                 SessionCountAuthenticatorConstants.LOGIN_STANDARD_PAGE,
                 SessionCountAuthenticatorConstants.SESSION_TERMINATION_ENFORCER_PAGE);
+    }
+
+    private ArrayList<String> getSelectedSessionIDs(Map<String, String[]> parameterMap) {
+        Set<String> keySet = parameterMap.keySet();
+        ArrayList<String> sessionIdList = new ArrayList<>();
+        Iterator iterator = keySet.iterator();
+        while (iterator.hasNext()) {
+            sessionIdList.add(iterator.next().toString());
+        }
+        sessionIdList.remove("sessionTerminationDataInput");
+        sessionIdList.remove("sessionDataKey");
+        sessionIdList.remove("sessionList");
+        sessionIdList.remove("activeSessionCount");
+        return sessionIdList;
     }
 
 }

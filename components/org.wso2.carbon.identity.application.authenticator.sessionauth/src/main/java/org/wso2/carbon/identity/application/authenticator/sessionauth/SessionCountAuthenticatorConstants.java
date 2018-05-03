@@ -28,7 +28,6 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final String SESSION_LIMIT_TAG = "sessionLimit";
     public static final String USER_STORE_TAG = "userstoreDomain";
     public static final String CONTENT_TYPE_TAG = "Content-type";
-    public static final String UTF_8_TAG = "UTF-8";
     public static final String AUTH_TYPE_KEY = "Basic ";
 
     public static final String QUOTE = "\"";
@@ -55,7 +54,5 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final String SESSION_TERMINATION_ENFORCER_PAGE = "session.jsp";
     public static final String AUTHENTICATOR_TYPE = "LOCAL";
 
-    private SessionCountAuthenticatorConstants() {
 
-    }
 }

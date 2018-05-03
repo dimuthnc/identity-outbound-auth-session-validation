@@ -156,8 +156,10 @@
                                     
                                     <input type="hidden" name="sessionDataKey"
                                            value='<%=request.getParameter("sessionDataKey")%>'/>
-                                    <input type="hidden" name="sessionTerminationDataInput"
-                                           value="sessionTerminationDataInput"/>
+                                    <input type="hidden" name="sessionTerminationDataInput"value="true"/>
+                                    <input type="hidden" name="activeSessionCount"
+                                           value=<%=sessionDataArray.length()%>  />
+                                    <input type="hidden" name="sessionLimit" value=<%=sessionLimit%>>
                                     <div class='col-md-10 form-group col-centered'>
                                         <table name="sessionData" id="sessionData"
                                                class="table table-bordered"
@@ -170,9 +172,7 @@
                                                 </th>
                                                 <th>User Agent</th>
                                                 <th>IP/Location</th>
-                                                <th>Session
-                                                    starting time
-                                                </th>
+                                                <th>Session Creation Time</th>
                                                 <th>Last Access Time</th>
                                             </tr>
                                                 <%
