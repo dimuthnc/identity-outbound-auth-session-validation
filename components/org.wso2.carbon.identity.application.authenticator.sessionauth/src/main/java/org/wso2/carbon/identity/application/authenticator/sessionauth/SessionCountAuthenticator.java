@@ -188,9 +188,11 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 log.info("Session with Session ID :" + sessionId + " removed as requested.");
             }
         }
-        if (activeSessionCount - closedSessionCount > sessionLimit) {
+        if (activeSessionCount - closedSessionCount >= sessionLimit) {
+
             throw new SessionValidationException("Terminated session amount is not sufficient to continue");
         }
+
     }
 
     @Override
@@ -341,6 +343,10 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         sessionIdList.remove("sessionDataKey");
         sessionIdList.remove("sessionList");
         sessionIdList.remove("activeSessionCount");
+        sessionIdList.remove("sessionLimit");
+        if (sessionIdList.contains("name")) {
+            sessionIdList.remove("name");
+        }
         return sessionIdList;
     }
 
