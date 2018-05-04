@@ -34,7 +34,6 @@ import org.json.JSONObject;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.graph.js.JsAuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 import org.wso2.carbon.identity.application.authentication.framework.exception.FrameworkException;
-import org.wso2.carbon.identity.application.authentication.framework.javascript.flow.IsValidFunction;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 
 import org.wso2.carbon.identity.application.authenticator.sessionauth.util.SessionValidationConstants;
@@ -55,7 +54,7 @@ import static java.lang.Integer.parseInt;
  */
 public class IsWithinSessionLimitFunction implements IsValidFunction {
 
-    private static final Log log = LogFactory.getLog(org.wso2.carbon.identity.application.authentication.framework.javascript.flow.IsWithinSessionLimitFunction.class);
+    private static final Log log = LogFactory.getLog(IsWithinSessionLimitFunction.class);
     private static final String USERNAME_CONFIG_NAME = "AnalyticsCredentials.Username";
     private static final String PASSWORD_CONFIG_NAME = "AnalyticsCredentials.Password";
 
