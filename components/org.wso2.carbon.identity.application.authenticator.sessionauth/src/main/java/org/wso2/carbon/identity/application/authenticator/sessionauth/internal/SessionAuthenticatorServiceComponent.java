@@ -20,38 +20,28 @@ package org.wso2.carbon.identity.application.authenticator.sessionauth.internal;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.wso2.carbon.identity.application.authentication.framework.ApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticator;
-import org.wso2.carbon.user.core.service.RealmService;
 
-/**
- * @scr.component name="identity.application.authenticator.sessionauth.component" immediate="true"
- * @scr.reference name="realm.service"
- * interface="org.wso2.carbon.user.core.service.RealmService"cardinality="1..1"
- * policy="dynamic" bind="setRealmService" unbind="unsetRealmService"
- */
+
+
+
+@Component(
+        name = "identity.application.authenticator.sessionauth.component",
+        immediate = true
+)
 public class SessionAuthenticatorServiceComponent {
 
     private static Log log = LogFactory.getLog(SessionAuthenticatorServiceComponent.class);
-
-    private static RealmService realmService;
-
-    public static RealmService getRealmService() {
-
-        return realmService;
-    }
-
-    protected void setRealmService(RealmService realmService) {
-
-        log.debug("Setting the Realm Service");
-        SessionAuthenticatorServiceComponent.realmService = realmService;
-    }
-
+    @Activate
     protected void activate(ComponentContext ctxt) {
-
         try {
             SessionCountAuthenticator sessionCountAuthenticator = new SessionCountAuthenticator();
-            ctxt.getBundleContext().registerService(ApplicationAuthenticator.class.getName(), sessionCountAuthenticator, null);
+            ctxt.getBundleContext().registerService(ApplicationAuthenticator.class.getName(),
+                    sessionCountAuthenticator, null);
             if (log.isDebugEnabled()) {
                 log.info("SessionCountAuthenticator bundle is activated");
             }
@@ -59,18 +49,12 @@ public class SessionAuthenticatorServiceComponent {
             log.error("SAMLSSO Authenticator bundle activation Failed", e);
         }
     }
-
+    @Deactivate
     protected void deactivate(ComponentContext ctxt) {
 
         if (log.isDebugEnabled()) {
             log.info("SessionCountAuthenticator bundle is deactivated");
         }
-    }
-
-    protected void unsetRealmService(RealmService realmService) {
-
-        log.debug("UnSetting the Realm Service");
-        SessionAuthenticatorServiceComponent.realmService = null;
     }
 
 }

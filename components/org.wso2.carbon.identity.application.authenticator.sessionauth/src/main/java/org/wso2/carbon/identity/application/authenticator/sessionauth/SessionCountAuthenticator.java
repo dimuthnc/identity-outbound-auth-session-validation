@@ -41,6 +41,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.services.SessionManagementService;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.exception.SessionValidationException;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,7 +49,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -64,6 +64,8 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
     private static final long serialVersionUID = 1819664539416029245L;
     private static final Log log = LogFactory.getLog(SessionCountAuthenticator.class);
+    private static final String USERNAME_CONFIG_NAME = "AnalyticsCredentials.Username";
+    private static final String PASSWORD_CONFIG_NAME = "AnalyticsCredentials.Password";
 
     @Override
     public boolean canHandle(HttpServletRequest request) {
@@ -139,7 +141,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 return AuthenticatorFlowStatus.INCOMPLETE;
 
             } catch (IOException e) {
-                log.error("Problem occurred in redirecting to the session termination page", e);
                 throw new AuthenticationFailedException("Problem occurred in redirecting to the session termination page", e);
             } catch (SessionValidationException e) {
                 throw new AuthenticationFailedException("Failed to retrieve session metadata", e);
@@ -174,6 +175,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     protected void processAuthenticationResponse(HttpServletRequest request,
                                                  HttpServletResponse response, AuthenticationContext context)
             throws AuthenticationFailedException {
+
         int closedSessionCount = 0;
         int sessionLimit = parseInt(request.getParameter("sessionLimit"));
         int activeSessionCount = parseInt(request.getParameter("activeSessionCount"));
@@ -266,13 +268,10 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
                 "}";
 
         StringEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
-
         HttpPost httpRequest = new HttpPost(SessionCountAuthenticatorConstants.TABLE_SEARCH_URL);
-        //TODO
-        //This username and password configurations should move to a configuration file and read from there
-        String toEncode = SessionCountAuthenticatorConstants.USERNAME_CONFIG
+        String toEncode = IdentityUtil.getProperty(USERNAME_CONFIG_NAME)
                 + SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR
-                + SessionCountAuthenticatorConstants.PASSWORD_CONFIG;
+                + IdentityUtil.getProperty(PASSWORD_CONFIG_NAME);
         byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName(StandardCharsets.UTF_8.name())));
         String authHeader = new String(encoding, Charset.defaultCharset());
         //Adding headers to request
@@ -332,11 +331,11 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     }
 
     private ArrayList<String> getSelectedSessionIDs(Map<String, String[]> parameterMap) {
+
         Set<String> keySet = parameterMap.keySet();
         ArrayList<String> sessionIdList = new ArrayList<>();
-        Iterator iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            sessionIdList.add(iterator.next().toString());
+        for (Object key : keySet) {
+            sessionIdList.add(key.toString());
         }
         sessionIdList.remove("sessionTerminationDataInput");
         sessionIdList.remove("sessionDataKey");
