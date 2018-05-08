@@ -55,6 +55,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static java.lang.Integer.parseInt;
+import static org.wso2.carbon.identity.application.authenticator.sessionauth.util.SessionValidationUtil.getSessionDetails;
 
 /**
  * Session count based authenticator
@@ -64,8 +65,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
     private static final long serialVersionUID = 1819664539416029245L;
     private static final Log log = LogFactory.getLog(SessionCountAuthenticator.class);
-    private static final String USERNAME_CONFIG_NAME = "AnalyticsCredentials.Username";
-    private static final String PASSWORD_CONFIG_NAME = "AnalyticsCredentials.Password";
+
 
     @Override
     public boolean canHandle(HttpServletRequest request) {
@@ -227,98 +227,10 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
      * @param userStore    userstore of the user
      * @return Query string
      */
-    private String getQuery(String tenantDomain, String username, String userStore) {
 
-        return SessionCountAuthenticatorConstants.QUOTE +
-                SessionCountAuthenticatorConstants.TENANT_DOMAIN_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                tenantDomain +
-                SessionCountAuthenticatorConstants.AND_TAG +
-                SessionCountAuthenticatorConstants.USERNAME_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                username +
-                SessionCountAuthenticatorConstants.AND_TAG +
-                SessionCountAuthenticatorConstants.USER_STORE_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                userStore +
-                SessionCountAuthenticatorConstants.QUOTE;
-    }
 
-    /**
-     * Method to create HTTP Request
-     *
-     * @param authenticatedUser AuthenticatedUser object for the user
-     * @return HttpPost request object
-     */
-    private HttpPost createHttpRequest(AuthenticatedUser authenticatedUser) {
 
-        String data = "{" +
-                SessionCountAuthenticatorConstants.TABLE_NAME_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                SessionCountAuthenticatorConstants.ACTIVE_SESSION_TABLE_NAME + "," +
-                SessionCountAuthenticatorConstants.QUERY_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                getQuery(authenticatedUser.getTenantDomain(), authenticatedUser.getUserName(), authenticatedUser
-                        .getUserStoreDomain())
-                + "," +
-                SessionCountAuthenticatorConstants.START_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                SessionCountAuthenticatorConstants.START_INDEX + "," +
-                SessionCountAuthenticatorConstants.COUNT_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                SessionCountAuthenticatorConstants.SESSION_COUNT_MAX +
-                "}";
 
-        StringEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
-        HttpPost httpRequest = new HttpPost(SessionCountAuthenticatorConstants.TABLE_SEARCH_URL);
-        String toEncode = IdentityUtil.getProperty(USERNAME_CONFIG_NAME)
-                + SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR
-                + IdentityUtil.getProperty(PASSWORD_CONFIG_NAME);
-        byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName(StandardCharsets.UTF_8.name())));
-        String authHeader = new String(encoding, Charset.defaultCharset());
-        //Adding headers to request
-        httpRequest.addHeader(HTTPConstants.HEADER_AUTHORIZATION, SessionCountAuthenticatorConstants.AUTH_TYPE_KEY +
-                authHeader);
-        httpRequest.addHeader(SessionCountAuthenticatorConstants.CONTENT_TYPE_TAG, "application/json");
-        httpRequest.setEntity(entity);
-        return httpRequest;
-    }
-
-    /**
-     * Method to retrieve session data from session data source
-     *
-     * @param authenticatedUser AuthenticatedUser object that represent the user
-     * @return JSON array with each element describing active session
-     * @throws IOException                When it fails to read response from the REST call
-     * @throws SessionValidationException when REST response is not in state 200
-     */
-    private JSONArray getSessionDetails(AuthenticatedUser authenticatedUser) throws
-            IOException, SessionValidationException {
-
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-        HttpClient httpClient = httpClientBuilder.build();
-        HttpPost httpPost = createHttpRequest(authenticatedUser);
-        HttpResponse httpResponse = httpClient.execute(httpPost);
-        JSONArray responseJsonArray;
-
-        if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            BufferedReader bufferedReader;
-            bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity()
-                    .getContent(),
-                    StandardCharsets.UTF_8.name()));
-            StringBuilder responseResult = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                responseResult.append(line);
-            }
-            responseJsonArray = new JSONArray(responseResult.toString());
-            bufferedReader.close();
-        } else {
-            throw new SessionValidationException("Failed to retrieve data from endpoint. Error code :" +
-                    httpResponse.getStatusLine().getStatusCode());
-        }
-        return responseJsonArray;
-    }
 
     /**
      * Method to retrieve custom login page for the authenticator
