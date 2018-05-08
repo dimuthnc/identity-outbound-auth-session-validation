@@ -48,10 +48,8 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final int START_INDEX = 0;
     public static final int SESSION_COUNT_MAX = 100;
 
-    public static final String USERNAME_CONFIG = "admin";
-    public static final String PASSWORD_CONFIG = "admin";
-    public static final String LOGIN_STANDARD_PAGE = "login.do";
-    public static final String SESSION_TERMINATION_ENFORCER_PAGE = "session.jsp";
+    public static final String LOGIN_STANDARD_PAGE = "authenticationendpoint/login.do";
+    public static final String SESSION_TERMINATION_ENFORCER_PAGE = "sessioncountauthenticationendpoint/Session.jsp";
     public static final String AUTHENTICATOR_TYPE = "LOCAL";
 
 

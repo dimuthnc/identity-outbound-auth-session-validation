@@ -17,14 +17,13 @@
   --%>
 
 <%@page import="org.apache.commons.ssl.Base64" %>
-<%@page import="org.json.JSONArray" %>
+
 <%@page import="org.json.JSONObject" %>
-<%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.Constants" %>
-<%@ page import="org.wso2.carbon.identity.application.authentication.endpoint.util.TenantDataManager" %>
 <%@ page import="java.sql.Timestamp" %>
 <%@ page import="static java.lang.Math.round" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="org.json.JSONArray" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
 <%
@@ -40,15 +39,6 @@
     String sessionData = new String(Base64.decodeBase64(sessionDataEncoded));
     JSONArray sessionDataArray = new JSONArray(sessionData);
     
-    if (Boolean.parseBoolean(request.getParameter(Constants.AUTH_FAILURE))) {
-        authenticationFailed = "true";
-        if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
-            errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
-            if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
-                errorMessage = "Authentication Failed! Please Retry";
-            }
-        }
-    }
 
 %>
 
