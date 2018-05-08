@@ -30,6 +30,8 @@ import org.wso2.carbon.identity.application.authentication.framework.Application
 import org.wso2.carbon.identity.application.authentication.framework.JsFunctionRegistry;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticator;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function.ExecuteActionFunction;
+import org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function.GetDataFunction;
+import org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function.GetSessionDataFunction;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function.IsValidFunction;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function.IsWithinSessionLimitFunction;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function.KillSessionFunction;
@@ -45,6 +47,7 @@ public class SessionAuthenticatorServiceComponent {
     private JsFunctionRegistry jsFunctionRegistry;
     private IsWithinSessionLimitFunction isWithinSessionLimitFunction;
     private KillSessionFunction killSessionFunction;
+    private GetSessionDataFunction getSessionDataFunction;
     @Activate
     protected void activate(ComponentContext ctxt) {
         try {
@@ -54,10 +57,13 @@ public class SessionAuthenticatorServiceComponent {
 
             isWithinSessionLimitFunction = new IsWithinSessionLimitFunction();
             killSessionFunction = new KillSessionFunction();
+            getSessionDataFunction = new GetSessionDataFunction();
             jsFunctionRegistry.register(JsFunctionRegistry.Subsystem.SEQUENCE_HANDLER, "isWithinSessionLimit",
                     (IsValidFunction) isWithinSessionLimitFunction);
             jsFunctionRegistry.register(JsFunctionRegistry.Subsystem.SEQUENCE_HANDLER,"killSession",
                     (ExecuteActionFunction) killSessionFunction);
+            jsFunctionRegistry.register(JsFunctionRegistry.Subsystem.SEQUENCE_HANDLER,"getSessionData",
+                    (GetDataFunction) getSessionDataFunction);
 
             if (log.isDebugEnabled()) {
                 log.info("SessionCountAuthenticator bundle is activated");
@@ -74,6 +80,8 @@ public class SessionAuthenticatorServiceComponent {
                     "isWithinSessionLimit");
             jsFunctionRegistry.deRegister(JsFunctionRegistry.Subsystem.SEQUENCE_HANDLER,
                     "killSession");
+            jsFunctionRegistry.deRegister(JsFunctionRegistry.Subsystem.SEQUENCE_HANDLER,
+                    "getSessionData");
         }
         if (log.isDebugEnabled()) {
             log.info("SessionCountAuthenticator bundle is deactivated");

@@ -18,14 +18,15 @@
  */
 package org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function;
 
+import org.json.JSONObject;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.graph.js.JsAuthenticationContext;
 
 import java.util.Map;
 
 /**
- * Function definition for verify some defined requirement is fulfilled.
+ * TODO:Class level comment
  */
 @FunctionalInterface
-public interface ExecuteActionFunction {
-    Boolean execute(JsAuthenticationContext context, Map<String,String> map);
+public interface GetDataFunction {
+    JSONObject getData(JsAuthenticationContext context, Map<String,String> map);
 }
