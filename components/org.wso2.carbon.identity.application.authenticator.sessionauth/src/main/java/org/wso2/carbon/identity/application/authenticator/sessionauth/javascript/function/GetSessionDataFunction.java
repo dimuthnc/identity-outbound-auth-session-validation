@@ -18,6 +18,8 @@
  */
 package org.wso2.carbon.identity.application.authenticator.sessionauth.javascript.function;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.graph.js.JsAuthenticationContext;
@@ -34,7 +36,7 @@ import static org.wso2.carbon.identity.application.authenticator.sessionauth.uti
  * TODO:Class level comment
  */
 public class GetSessionDataFunction implements GetDataFunction {
-
+    private static final Log log = LogFactory.getLog(GetSessionDataFunction.class);
     @Override
     public JSONObject getData(JsAuthenticationContext context, Map<String, String> map) {
 

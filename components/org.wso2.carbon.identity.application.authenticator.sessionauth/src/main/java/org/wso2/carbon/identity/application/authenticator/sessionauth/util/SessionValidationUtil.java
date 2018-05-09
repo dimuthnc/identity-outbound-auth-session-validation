@@ -26,6 +26,7 @@ import org.apache.commons.ssl.Base64;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -120,7 +121,7 @@ public class SessionValidationUtil {
         return httpRequest;
     }
 
-    private static String getQuery(String tenantDomain, String username, String userStore) {
+    public static String getQuery(String tenantDomain, String username, String userStore) {
 
         return
                 SessionCountAuthenticatorConstants.TENANT_DOMAIN_TAG +
@@ -135,6 +136,24 @@ public class SessionValidationUtil {
                 SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
                 userStore ;
     }
+
+    /**
+     * Method used for adding authentication header for httpMethod.
+     *
+     * @param httpMethod httpMethod that needs auth header to be added
+     * @param username   username of user
+     * @param password   password of the user
+     */
+    public static HttpPost setAuthorizationHeader(HttpPost httpMethod, String username, String password) {
+
+        String toEncode = username + SessionValidationConstants.JSSessionCountValidation.ATTRIBUTE_SEPARATOR + password;
+        byte[] encoding = org.apache.commons.codec.binary.Base64.encodeBase64(toEncode.getBytes(Charset.forName(StandardCharsets.UTF_8.name())));
+        String authHeader = new String(encoding, Charset.defaultCharset());
+        httpMethod.addHeader(HTTPConstants.HEADER_AUTHORIZATION,
+                SessionValidationConstants.JSSessionCountValidation.AUTH_TYPE_KEY + authHeader);
+        return httpMethod;
+    }
+
 
 
 }

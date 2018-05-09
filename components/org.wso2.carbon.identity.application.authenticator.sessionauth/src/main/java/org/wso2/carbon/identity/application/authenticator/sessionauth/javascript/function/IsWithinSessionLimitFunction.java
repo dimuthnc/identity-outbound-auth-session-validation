@@ -37,6 +37,7 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.F
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 
 import org.wso2.carbon.identity.application.authenticator.sessionauth.util.SessionValidationConstants;
+import org.wso2.carbon.identity.application.authenticator.sessionauth.util.SessionValidationUtil;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
 
 import java.io.BufferedReader;
@@ -74,7 +75,7 @@ public class IsWithinSessionLimitFunction implements IsValidFunction {
         boolean state = false;
         int sessionLimit = getSessionLimitFromMap(map);
         AuthenticatedUser authenticatedUser = context.getWrapped().getLastAuthenticatedUser();
-
+        log.info("|"+authenticatedUser.getAuthenticatedSubjectIdentifier()+"|");
         if (authenticatedUser == null) {
             throw new AuthenticationFailedException("Unable to find the Authenticated user from previous step");
         }
@@ -91,44 +92,8 @@ public class IsWithinSessionLimitFunction implements IsValidFunction {
         return state;
     }
 
-    /**
-     * Method used for adding authentication header for httpMethod.
-     *
-     * @param httpMethod httpMethod that needs auth header to be added
-     * @param username   username of user
-     * @param password   password of the user
-     */
-    private void setAuthorizationHeader(HttpRequestBase httpMethod, String username, String password) {
 
-        String toEncode = username + SessionValidationConstants.JSSessionCountValidation.ATTRIBUTE_SEPARATOR + password;
-        byte[] encoding = Base64.encodeBase64(toEncode.getBytes(Charset.forName(StandardCharsets.UTF_8.name())));
-        String authHeader = new String(encoding, Charset.defaultCharset());
-        httpMethod.addHeader(HTTPConstants.HEADER_AUTHORIZATION,
-                SessionValidationConstants.JSSessionCountValidation.AUTH_TYPE_KEY + authHeader);
-    }
 
-    /**
-     * Method for generating the table query for retrieving session information.
-     *
-     * @param tenantDomain Tenant Domain User belong to
-     * @param username     Username of the user
-     * @param userStore    Userstore of the user
-     * @return Query String
-     */
-    private String getQuery(String tenantDomain, String username, String userStore) {
-
-        return SessionValidationConstants.JSSessionCountValidation.TENANT_DOMAIN_TAG +
-                SessionValidationConstants.JSSessionCountValidation.ATTRIBUTE_SEPARATOR +
-                tenantDomain +
-                SessionValidationConstants.JSSessionCountValidation.AND_TAG +
-                SessionValidationConstants.JSSessionCountValidation.USERNAME_TAG +
-                SessionValidationConstants.JSSessionCountValidation.ATTRIBUTE_SEPARATOR +
-                username +
-                SessionValidationConstants.JSSessionCountValidation.AND_TAG +
-                SessionValidationConstants.JSSessionCountValidation.USER_STORE_TAG +
-                SessionValidationConstants.JSSessionCountValidation.ATTRIBUTE_SEPARATOR +
-                userStore;
-    }
 
     /**
      * Method for retrieving user defined maximum session limit from parameter map
@@ -156,7 +121,7 @@ public class IsWithinSessionLimitFunction implements IsValidFunction {
         paramMap.put(SessionValidationConstants.JSSessionCountValidation.TABLE_NAME_TAG,
                 SessionValidationConstants.JSSessionCountValidation.ACTIVE_SESSION_TABLE_NAME);
         paramMap.put(SessionValidationConstants.JSSessionCountValidation.QUERY_TAG,
-                getQuery(authenticatedUser.getTenantDomain(),
+                SessionValidationUtil.getQuery(authenticatedUser.getTenantDomain(),
                         authenticatedUser.getUserName(),
                         authenticatedUser.getUserStoreDomain()));
 
@@ -165,7 +130,7 @@ public class IsWithinSessionLimitFunction implements IsValidFunction {
         HttpClient httpClient = httpClientBuilder.build();
         HttpPost request = new HttpPost(SessionValidationConstants.JSSessionCountValidation.TABLE_SEARCH_COUNT_URL);
 
-        setAuthorizationHeader(request,
+        request = SessionValidationUtil.setAuthorizationHeader(request,
                 IdentityUtil.getProperty(USERNAME_CONFIG_NAME),
                 IdentityUtil.getProperty(PASSWORD_CONFIG_NAME));
         request.addHeader(SessionValidationConstants.JSSessionCountValidation.CONTENT_TYPE_TAG, "application/json");
