@@ -28,7 +28,6 @@ public class SessionValidationConstants {
         public static final String CONTENT_TYPE_TAG = "Content-type";
         public static final String UTF_8_TAG = "UTF-8";
         public static final String AUTH_TYPE_KEY = "Basic ";
-        //public static final String QUOTE = "\"";
         public static final String ATTRIBUTE_SEPARATOR = ":";
         public static final String ACTIVE_SESSION_TABLE_NAME = "ORG_WSO2_IS_ANALYTICS_STREAM_ACTIVESESSIONS";
         public static final String TABLE_NAME_TAG = "tableName";

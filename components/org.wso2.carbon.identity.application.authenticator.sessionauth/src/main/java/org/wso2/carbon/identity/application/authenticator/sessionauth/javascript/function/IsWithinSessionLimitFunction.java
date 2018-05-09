@@ -49,7 +49,8 @@ import java.util.Map;
 import static java.lang.Integer.parseInt;
 
 /**
- * Function to check if the given user has valid number of sessions.
+ * Represents javascript function provided in conditional authentication to check if the given user has valid number of
+ * sessions.
  * The purpose is to perform dynamic authentication selection based on the active session count.
  */
 public class IsWithinSessionLimitFunction implements IsValidFunction {
@@ -159,9 +160,8 @@ public class IsWithinSessionLimitFunction implements IsValidFunction {
                         authenticatedUser.getUserName(),
                         authenticatedUser.getUserStoreDomain()));
 
-        String data = paramMap.toString();
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-        StringEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
+        StringEntity entity = new StringEntity(paramMap.toString(), ContentType.APPLICATION_JSON);
         HttpClient httpClient = httpClientBuilder.build();
         HttpPost request = new HttpPost(SessionValidationConstants.JSSessionCountValidation.TABLE_SEARCH_COUNT_URL);
 

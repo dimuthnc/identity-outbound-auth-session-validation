@@ -30,34 +30,17 @@ public class Session {
     String timeStamp;
     String userAgent;
     String ipAddress;
+    String serviceProvider;
 
-    public Session(String sessionId, String startTimeStamp, String userAgent, String ipAddress) {
+    public Session(String sessionId, String startTimeStamp, String userAgent, String ipAddress,String serviceProvider) {
 
         this.sessionId = sessionId;
         this.timeStamp = startTimeStamp;
         this.userAgent = userAgent;
         this.ipAddress = ipAddress;
+        this.serviceProvider = serviceProvider;
     }
 
-    public String getSessionId() {
-
-        return sessionId;
-    }
-
-    public String getTimeStamp() {
-
-        return timeStamp;
-    }
-
-    public String getUserAgent() {
-
-        return userAgent;
-    }
-
-    public String getIpAddress() {
-
-        return ipAddress;
-    }
 
     public JSONObject getJSONObject(){
         JSONObject jsonObject = new JSONObject();
@@ -65,6 +48,7 @@ public class Session {
         jsonObject.put("timestamp", timeStamp);
         jsonObject.put("userAgent",userAgent);
         jsonObject.put("ipAddress",ipAddress);
+        jsonObject.put("serviceProvider",serviceProvider);
         return jsonObject;
     }
 }

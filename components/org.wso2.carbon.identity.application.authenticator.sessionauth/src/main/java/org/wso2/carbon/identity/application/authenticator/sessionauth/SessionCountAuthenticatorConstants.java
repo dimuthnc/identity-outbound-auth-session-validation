@@ -33,11 +33,11 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final String QUOTE = "\"";
     public static final String ATTRIBUTE_SEPARATOR = ":";
 
-    public static final String ACTIVE_SESSION_TABLE_NAME = QUOTE + "ORG_WSO2_IS_ANALYTICS_STREAM_ACTIVESESSIONS" + QUOTE;
-    public static final String TABLE_NAME_TAG = QUOTE + "tableName" + QUOTE;
-    public static final String QUERY_TAG = QUOTE + "query" + QUOTE;
-    public static final String COUNT_TAG = QUOTE + "count" + QUOTE;
-    public static final String START_TAG = QUOTE + "start" + QUOTE;
+    public static final String ACTIVE_SESSION_TABLE_NAME = "ORG_WSO2_IS_ANALYTICS_STREAM_ACTIVESESSIONS";
+    public static final String TABLE_NAME_TAG = "tableName";
+    public static final String QUERY_TAG = "query";
+    public static final String COUNT_TAG = "count";
+    public static final String START_TAG = "start";
 
     public static final String TENANT_DOMAIN_TAG = "tenantDomain";
     public static final String AND_TAG = " AND ";
@@ -51,6 +51,5 @@ public abstract class SessionCountAuthenticatorConstants {
     public static final String LOGIN_STANDARD_PAGE = "authenticationendpoint/login.do";
     public static final String SESSION_TERMINATION_ENFORCER_PAGE = "sessioncountauthenticationendpoint/Session.jsp";
     public static final String AUTHENTICATOR_TYPE = "LOCAL";
-
 
 }

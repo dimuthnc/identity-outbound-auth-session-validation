@@ -52,9 +52,10 @@ public class GetSessionDataFunction implements GetDataFunction {
                 JSONObject sessionValues = sessionJsonObject.getJSONObject("values");
                 String sessionId = sessionValues.getString("sessionId");
                 String timestamp = sessionJsonObject.get("timestamp").toString();
-                String userAgent = sessionValues.getString("userAgent");
+                String userAgent = sessionValues.get("userAgent").toString();
                 String ipAddress = sessionValues.getString("remoteIp");
-                Session session = new Session(sessionId, timestamp, userAgent, ipAddress);
+                String serviceProvider = sessionValues.getString("serviceProvider");
+                Session session = new Session(sessionId, timestamp, userAgent, ipAddress, serviceProvider);
                 jsonArray.put(session.getJSONObject());
             }
             jsonObject.put("sessions", jsonArray);

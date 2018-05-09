@@ -17,18 +17,10 @@
  */
 package org.wso2.carbon.identity.application.authenticator.sessionauth;
 
-import org.apache.axis2.transport.http.HTTPConstants;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.ssl.Base64;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
 import org.wso2.carbon.identity.application.authentication.framework.AbstractApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
@@ -41,11 +33,8 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.services.SessionManagementService;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.exception.SessionValidationException;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -65,7 +54,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
     private static final long serialVersionUID = 1819664539416029245L;
     private static final Log log = LogFactory.getLog(SessionCountAuthenticator.class);
-
 
     @Override
     public boolean canHandle(HttpServletRequest request) {
@@ -227,10 +215,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
      * @param userStore    userstore of the user
      * @return Query string
      */
-
-
-
-
 
     /**
      * Method to retrieve custom login page for the authenticator

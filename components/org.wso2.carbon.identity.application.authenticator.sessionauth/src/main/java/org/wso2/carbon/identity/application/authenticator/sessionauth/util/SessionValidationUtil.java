@@ -20,6 +20,8 @@ package org.wso2.carbon.identity.application.authenticator.sessionauth.util;
 
 import org.apache.axis2.transport.http.HTTPConstants;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.ssl.Base64;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -28,7 +30,9 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
+import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticator;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticatorConstants;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.exception.SessionValidationException;
 import org.wso2.carbon.identity.core.util.IdentityUtil;
@@ -46,7 +50,7 @@ public class SessionValidationUtil {
 
     private static final String USERNAME_CONFIG_NAME = "AnalyticsCredentials.Username";
     private static final String PASSWORD_CONFIG_NAME = "AnalyticsCredentials.Password";
-
+    private static final Log log = LogFactory.getLog(SessionValidationUtil.class);
 
     /**
      * Method to retrieve session data from session data source
@@ -92,24 +96,16 @@ public class SessionValidationUtil {
      */
     private static HttpPost createHttpRequest(AuthenticatedUser authenticatedUser) {
 
-        String data = "{" +
-                SessionCountAuthenticatorConstants.TABLE_NAME_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                SessionCountAuthenticatorConstants.ACTIVE_SESSION_TABLE_NAME + "," +
-                SessionCountAuthenticatorConstants.QUERY_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
+        JSONObject requestData = new JSONObject();
+        requestData.put(SessionCountAuthenticatorConstants.TABLE_NAME_TAG,
+                SessionCountAuthenticatorConstants.ACTIVE_SESSION_TABLE_NAME );
+        requestData.put(SessionCountAuthenticatorConstants.QUERY_TAG,
                 getQuery(authenticatedUser.getTenantDomain(), authenticatedUser.getUserName(), authenticatedUser
-                        .getUserStoreDomain())
-                + "," +
-                SessionCountAuthenticatorConstants.START_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                SessionCountAuthenticatorConstants.START_INDEX + "," +
-                SessionCountAuthenticatorConstants.COUNT_TAG +
-                SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                SessionCountAuthenticatorConstants.SESSION_COUNT_MAX +
-                "}";
-
-        StringEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
+                .getUserStoreDomain()));
+        requestData.put(SessionCountAuthenticatorConstants.START_TAG,SessionCountAuthenticatorConstants.START_INDEX);
+        requestData.put( SessionCountAuthenticatorConstants.COUNT_TAG,
+                SessionCountAuthenticatorConstants.SESSION_COUNT_MAX);
+        StringEntity entity = new StringEntity(requestData.toString(), ContentType.APPLICATION_JSON);
         HttpPost httpRequest = new HttpPost(SessionCountAuthenticatorConstants.TABLE_SEARCH_URL);
         String toEncode = IdentityUtil.getProperty(USERNAME_CONFIG_NAME)
                 + SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR
@@ -126,7 +122,7 @@ public class SessionValidationUtil {
 
     private static String getQuery(String tenantDomain, String username, String userStore) {
 
-        return SessionCountAuthenticatorConstants.QUOTE +
+        return
                 SessionCountAuthenticatorConstants.TENANT_DOMAIN_TAG +
                 SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
                 tenantDomain +
@@ -137,8 +133,7 @@ public class SessionValidationUtil {
                 SessionCountAuthenticatorConstants.AND_TAG +
                 SessionCountAuthenticatorConstants.USER_STORE_TAG +
                 SessionCountAuthenticatorConstants.ATTRIBUTE_SEPARATOR +
-                userStore +
-                SessionCountAuthenticatorConstants.QUOTE;
+                userStore ;
     }
 
 
