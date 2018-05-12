@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -25,7 +25,6 @@ import org.json.JSONArray;
 import org.wso2.carbon.identity.application.authentication.framework.AbstractApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
 import org.wso2.carbon.identity.application.authentication.framework.LocalApplicationAuthenticator;
-import org.wso2.carbon.identity.application.authentication.framework.config.ConfigurationFacade;
 import org.wso2.carbon.identity.application.authentication.framework.config.model.StepConfig;
 import org.wso2.carbon.identity.application.authentication.framework.context.AuthenticationContext;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
@@ -33,6 +32,7 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.services.SessionManagementService;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.exception.SessionValidationException;
+import org.wso2.carbon.identity.application.authenticator.sessionauth.util.AuthenticatorUtil;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -44,7 +44,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import static java.lang.Integer.parseInt;
-import static org.wso2.carbon.identity.application.authenticator.sessionauth.util.SessionValidationUtil.getSessionDetails;
+import static org.wso2.carbon.identity.application.authenticator.sessionauth.util.AuthenticatorUtil.getSessionDetails;
 
 /**
  * Session count based authenticator
@@ -69,6 +69,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
         if (context.isLogoutRequest()) {
             return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
         }
+        //checks whether request has gone through the session.jsp page or not
         if (StringUtils.isNotEmpty(request.getParameter(
                 SessionCountAuthenticatorConstants.SESSION_TERMINATION_SERVLET_INPUT))) {
             try {
@@ -106,10 +107,13 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
 
         if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof
                 LocalApplicationAuthenticator) {
-            String loginPage = getLoginPageURL();
+            String loginPage = AuthenticatorUtil.getLoginPageURL();
             try {
                 JSONArray sessionMetaData = getSessionDetails(authenticatedUser);
                 int sessionLimit = getAllowedSessionLimit(context, sessionMetaData.length());
+                if (log.isDebugEnabled()) {
+                    log.debug("Decided session limit is :" + sessionLimit);
+                }
                 byte[] encodedBytes = Base64.encodeBase64(sessionMetaData.toString().getBytes(Charset.forName(
                         StandardCharsets.UTF_8.name())));
                 String queryParams = FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
@@ -145,16 +149,23 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
      * @return integer indicating the allowed session limit
      */
     private int getAllowedSessionLimit(AuthenticationContext context, int activeSessionCount) {
-
+        //Default value for session limit. If session limit is not defined in context properties, current session
+        // count - 1 will be taken as the session limit. This can be removed or replaced with configuration value
         int sessionLimit = activeSessionCount - 1;
         Object sessionLimitObject = context.getProperty(SessionCountAuthenticatorConstants.SESSION_LIMIT_TAG);
 
         if (sessionLimitObject != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Session Limit defined in the context");
+            }
             try {
                 sessionLimit = parseInt(sessionLimitObject.toString());
             } catch (NumberFormatException e) {
                 log.error("Invalid string value found as session Limit", e);
             }
+        }
+        if (sessionLimit < 0) {
+            return 0;
         }
         return sessionLimit;
     }
@@ -165,15 +176,18 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             throws AuthenticationFailedException {
 
         int closedSessionCount = 0;
-        int sessionLimit = parseInt(request.getParameter("sessionLimit"));
-        int activeSessionCount = parseInt(request.getParameter("activeSessionCount"));
+        int sessionLimit = parseInt(request.getParameter(SessionCountAuthenticatorConstants.SESSION_LIMIT_TAG));
+        int activeSessionCount = parseInt(request.getParameter(SessionCountAuthenticatorConstants
+                .ACTIVE_SESSION_COUNT_TAG));
         SessionManagementService sessionManagementService = new SessionManagementService();
         ArrayList<String> sessionIDList = getSelectedSessionIDs(request.getParameterMap());
         for (String sessionId : sessionIDList) {
             boolean isRemoved = sessionManagementService.removeSession(sessionId);
             if (isRemoved) {
                 closedSessionCount++;
-                log.info("Session with Session ID :" + sessionId + " removed as requested.");
+                if(log.isDebugEnabled()){
+                    log.debug("Session with Session ID :" + sessionId + " removed as requested.");
+                }
             }
         }
         if (activeSessionCount - closedSessionCount >= sessionLimit) {
@@ -192,7 +206,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     @Override
     public String getContextIdentifier(HttpServletRequest request) {
 
-        return request.getParameter("sessionDataKey");
+        return request.getParameter(SessionCountAuthenticatorConstants.SESSION_DATA_KEY_TAG);
     }
 
     @Override
@@ -205,27 +219,6 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
     public String getName() {
 
         return SessionCountAuthenticatorConstants.AUTHENTICATOR_NAME;
-    }
-
-    /**
-     * Method to create the query to pass to get session details
-     *
-     * @param tenantDomain tenant domain the user belong to
-     * @param username     username of the user
-     * @param userStore    userstore of the user
-     * @return Query string
-     */
-
-    /**
-     * Method to retrieve custom login page for the authenticator
-     *
-     * @return custom login page of authenticator
-     */
-    private String getLoginPageURL() {
-
-        return ConfigurationFacade.getInstance().getAuthenticationEndpointURL().replace(
-                SessionCountAuthenticatorConstants.LOGIN_STANDARD_PAGE,
-                SessionCountAuthenticatorConstants.SESSION_TERMINATION_ENFORCER_PAGE);
     }
 
     private ArrayList<String> getSelectedSessionIDs(Map<String, String[]> parameterMap) {

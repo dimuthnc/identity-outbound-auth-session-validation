@@ -28,9 +28,4 @@ public class SessionValidationException extends AuthenticationFailedException {
 
         super(message);
     }
-
-    public SessionValidationException(String message, Throwable cause) {
-
-        super(message, cause);
-    }
 }
