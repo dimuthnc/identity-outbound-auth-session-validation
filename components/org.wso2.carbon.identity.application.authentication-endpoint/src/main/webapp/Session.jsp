@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
   ~ WSO2 Inc. licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -254,7 +254,7 @@
     private static final String DEFAULT_USER_AGENT_NAME = "Unknown";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm  EEE, d MMM yyyy ");
     
-    
+    //Method to identify time difference between current time and session creation time
     private String getTimeDifference(long currentTime, long startedTime) {
         
         long timeDiff = currentTime - startedTime;
@@ -271,17 +271,17 @@
         }
         return lastAccessed;
     }
-    
+    //Method to retrieve string from a JSON Object when the key is provided
     private String getStringFromJSON(JSONObject jsonObject, String key) {
         
         return jsonObject.get(key).toString();
     }
-    
+    //Method to create a JSON Object from a string
     private JSONObject getJSONFromString(String jsonString) {
         
         return new JSONObject(jsonString);
     }
-    
+    //Method to retrieve User Agent from the given JSON Object. This will return shortened name
     private String getUserAgent(JSONObject jsonObject) {
         
         String userAgent = getStringFromJSON(jsonObject, "userAgent");
@@ -290,7 +290,7 @@
         }
         return userAgent.split("/")[0];
     }
-    
+    //Method to retrieve User Agent from the given JSON Object
     private String getUserAgentDescription(JSONObject jsonObject) {
         
         String userAgent = getStringFromJSON(jsonObject, "userAgent");
@@ -299,7 +299,7 @@
         }
         return userAgent;
     }
-    
+    //Method to retrieve session creation time
     private String getStartTime(JSONObject jsonObject) {
         
         String timestamp = getStringFromJSON(jsonObject, "startTimestamp");
