@@ -23,7 +23,6 @@ import org.apache.http.Header;
 import org.apache.http.client.methods.HttpPost;
 import org.json.JSONArray;
 import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.Assert;
 import org.testng.IObjectFactory;
 import org.testng.annotations.BeforeClass;
@@ -40,10 +39,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 /**
- * TODO:Class level comment
+ * Class for testing AuthenticatorUtil class
  */
 
 public class AuthenticatorUtilTest {
@@ -51,10 +49,10 @@ public class AuthenticatorUtilTest {
     @Mock
     AuthenticatedUser authenticatedUserMock;
 
-
-
+    //method for setting up tests and mock objects
     @BeforeClass
     public void setup() {
+
         initMocks(this);
         when(authenticatedUserMock.getUserName()).thenReturn(
                 TestUtils.getRandomString(10, true, false));
@@ -65,6 +63,7 @@ public class AuthenticatorUtilTest {
 
     }
 
+    //Testing getQuery utility method
     @Test
     public void testGetQuery() {
 
@@ -76,6 +75,7 @@ public class AuthenticatorUtilTest {
 
     }
 
+    //Testing setAuthorization header utility method
     @Test
     public void testSetAuthorizationHeader() {
 
@@ -93,20 +93,19 @@ public class AuthenticatorUtilTest {
         Assert.assertEquals("Basic " + authHeader, header.getValue());
 
     }
+
     //Test for JSON response is []
-    @Test (expectedExceptions = {SessionValidationException.class,NullPointerException.class})
+    @Test(expectedExceptions = {SessionValidationException.class, NullPointerException.class})
     public void testGetSessionDetails() throws IOException, SessionValidationException {
+
         JSONArray respond = AuthenticatorUtil.getSessionDetails(authenticatedUserMock);
         Assert.assertEquals(respond.toString().charAt(0), '[');
         Assert.assertEquals(respond.toString().charAt(respond.toString().length() - 1), ']');
     }
 
-
-
-
-
     @ObjectFactory
     public IObjectFactory getObjectFactory() {
+
         return new org.powermock.modules.testng.PowerMockObjectFactory();
     }
 

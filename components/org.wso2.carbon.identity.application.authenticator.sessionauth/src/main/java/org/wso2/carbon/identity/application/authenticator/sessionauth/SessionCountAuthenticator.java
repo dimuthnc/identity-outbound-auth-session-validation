@@ -185,7 +185,7 @@ public class SessionCountAuthenticator extends AbstractApplicationAuthenticator
             boolean isRemoved = sessionManagementService.removeSession(sessionId);
             if (isRemoved) {
                 closedSessionCount++;
-                if(log.isDebugEnabled()){
+                if (log.isDebugEnabled()) {
                     log.debug("Session with Session ID :" + sessionId + " removed as requested.");
                 }
             }

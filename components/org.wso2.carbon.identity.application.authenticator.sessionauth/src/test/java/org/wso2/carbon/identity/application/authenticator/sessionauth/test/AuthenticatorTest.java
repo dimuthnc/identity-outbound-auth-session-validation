@@ -19,7 +19,6 @@
 package org.wso2.carbon.identity.application.authenticator.sessionauth.test;
 
 import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -33,7 +32,6 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.A
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticator;
 import org.wso2.carbon.identity.application.authenticator.sessionauth.SessionCountAuthenticatorConstants;
-import org.wso2.carbon.identity.application.authenticator.sessionauth.util.AuthenticatorUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,10 +41,9 @@ import javax.servlet.http.HttpServletResponse;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 /**
- * TODO:Class level comment
+ * Class for testing Authenticator
  */
 public class AuthenticatorTest {
 
@@ -69,6 +66,7 @@ public class AuthenticatorTest {
 
     AuthenticationContext context = new AuthenticationContext();
 
+    //method for setting up tests and mock objects
     @BeforeClass
     public void setup() {
 
@@ -76,12 +74,14 @@ public class AuthenticatorTest {
 
     }
 
+    //method to test getName function
     @Test
     public void testGetName() {
 
         Assert.assertEquals(sessionCountAuthenticator.getName(), SessionCountAuthenticatorConstants.AUTHENTICATOR_NAME);
     }
 
+    //method to test getFriendlyName function
     @Test
     public void testGetFriendlyName() {
 
@@ -116,7 +116,7 @@ public class AuthenticatorTest {
 
     //testing when initial request is called and authenticated user is not null. Null pointer exception is expected
     // as it cannot retrieve data from ConfigurationFacade
-    @Test (expectedExceptions = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void testProcessInitialRequestWithValidUser() throws AuthenticationFailedException {
 
         SessionCountAuthenticator sessionCountAuthenticator = spy(SessionCountAuthenticator.class);

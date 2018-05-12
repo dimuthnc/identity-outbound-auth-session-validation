@@ -21,7 +21,7 @@ package org.wso2.carbon.identity.application.authenticator.sessionauth.test;
 import org.apache.commons.lang.RandomStringUtils;
 
 /**
- * TODO:Class level comment
+ * Utility methods required for testing
  */
 public class TestUtils {
 
