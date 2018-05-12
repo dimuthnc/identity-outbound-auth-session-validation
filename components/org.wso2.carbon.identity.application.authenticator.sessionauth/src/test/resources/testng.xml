@@ -1,9 +1,10 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="Identity-connector-password-policy-test-suite">
-    <test name="password-policy-authenticator-all" parallel="false">
+<suite name="Identity-connector-session-validation-test-suite">
+    <test name="session-validation-authenticator-all" parallel="false">
         <classes>
-            <class name="org.wso2.carbon.identity.application.authenticator.sessionauth.test.SessionValidationUtilTest"/>
+            <class name="org.wso2.carbon.identity.application.authenticator.sessionauth.test.AuthenticatorUtilTest"/>
+            <class name="org.wso2.carbon.identity.application.authenticator.sessionauth.test.AuthenticatorTest"/>
         </classes>
     </test>
 </suite>
