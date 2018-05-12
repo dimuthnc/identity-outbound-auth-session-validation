@@ -18,12 +18,12 @@
 
 <%@page import="org.apache.commons.ssl.Base64" %>
 
-<%@page import="org.json.JSONObject" %>
-<%@ page import="java.sql.Timestamp" %>
+<%@page import="org.json.JSONArray" %>
+<%@ page import="org.json.JSONObject" %>
 <%@ page import="static java.lang.Math.round" %>
+<%@ page import="java.sql.Timestamp" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
-<%@ page import="org.json.JSONArray" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 
 <%
@@ -38,7 +38,7 @@
     String terminateCount = request.getParameter("terminateCount");
     String sessionData = new String(Base64.decodeBase64(sessionDataEncoded));
     JSONArray sessionDataArray = new JSONArray(sessionData);
-    
+
 
 %>
 
@@ -52,11 +52,9 @@
     <link href="libs/bootstrap_3.3.5/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/Roboto.css" rel="stylesheet">
     <link href="css/custom-common.css" rel="stylesheet">
-    
-    
-    <script src="js/scripts.js"></script>
     <script src="assets/js/jquery-1.7.1.min.js"></script>
     <script>
+        //Click listner for checkbox to select all sessions
         function onSelectAllChecked() {
             var checked = document.getElementById("selectAll").checked;
             if (checked) {
@@ -80,10 +78,6 @@
             element.innerText = text;
         }
     </script>
-    <!--[if lt IE 9]>
-    <script src="js/html5shiv.min.js"></script>
-    <script src="js/respond.min.js"></script>
-    <![endif]-->
 
 
 </head>
@@ -146,7 +140,7 @@
                                     
                                     <input type="hidden" name="sessionDataKey"
                                            value='<%=request.getParameter("sessionDataKey")%>'/>
-                                    <input type="hidden" name="sessionTerminationDataInput"value="true"/>
+                                    <input type="hidden" name="sessionTerminationDataInput" value="true"/>
                                     <input type="hidden" name="activeSessionCount"
                                            value=<%=sessionDataArray.length()%>  />
                                     <input type="hidden" name="sessionLimit" value=<%=sessionLimit%>>
@@ -259,6 +253,7 @@
 <%!
     private static final String DEFAULT_USER_AGENT_NAME = "Unknown";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm  EEE, d MMM yyyy ");
+    
     
     private String getTimeDifference(long currentTime, long startedTime) {
         
