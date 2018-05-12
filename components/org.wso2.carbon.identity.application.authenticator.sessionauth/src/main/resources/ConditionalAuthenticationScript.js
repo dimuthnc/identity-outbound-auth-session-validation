@@ -5,12 +5,12 @@ function onInitialRequest(context) {
             success: function (context) {
                 var sessionAttributeMap = {};
                 sessionAttributeMap["sessionLimit"] = "2";
-                var isAllowed = isWithinSessionLimit(context,sessionAttributeMap );
-                Log.info("Within Session Limit  :"+ isAllowed)
+                var isAllowed = isWithinSessionLimit(context, sessionAttributeMap);
+                Log.info("Within Session Limit  :" + isAllowed)
                 if (isAllowed) {
                     executeStep({id: '2'});
                 }
-                else{
+                else {
                     executeStep({id: '3'});
                     executeStep({id: '2'});
                 }
